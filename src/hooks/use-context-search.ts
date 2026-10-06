@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { projects } from "@/data/projects"
+import { searchReconstruction, useProjectBundle } from "@/services/api/bundle"
 import type { SearchFilters } from "@/types"
-import { buildSearchRecords, recordMatches, resolveTimelineEvents } from "@/utils/history"
+import { buildSearchRecords, recordMatches, resolveTimelineEvents, type SearchRecord } from "@/utils/history"
 
 function readFilters(params: URLSearchParams): SearchFilters {
   return {
@@ -17,15 +18,52 @@ function readFilters(params: URLSearchParams): SearchFilters {
 }
 
 export function useContextSearch() {
+  const bundle = useProjectBundle()
   const [params, setParams] = useSearchParams()
   const filters = readFilters(params)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [remote, setRemote] = useState<SearchRecord[] | null>(null)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const filterKey = params.toString()
   const events = useMemo(() => resolveTimelineEvents(), [])
   const records = useMemo(() => buildSearchRecords(events), [events])
-  const results = useMemo(
+  const localResults = useMemo(
     () => records.filter((record) => recordMatches(record, filters)),
     [records, filters],
   )
+
+  useEffect(() => {
+    if (bundle.status !== "ready") return
+    const query = new URLSearchParams(filterKey).get("q") ?? ""
+    if (!query.trim()) {
+      setRemote([])
+      return
+    }
+    let cancelled = false
+    setRemote(null)
+    setSearchError(null)
+    const request = new URLSearchParams()
+    const current = readFilters(new URLSearchParams(filterKey))
+    request.set("q", current.query)
+    if (current.type !== "all") request.set("type", current.type)
+    if (current.person !== "all") request.set("person", current.person)
+    if (current.status !== "all") request.set("status", current.status)
+    if (current.from) request.set("start_date", current.from)
+    if (current.to) request.set("end_date", current.to)
+    searchReconstruction(request)
+      .then((results) => {
+        if (!cancelled) setRemote(results)
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        setSearchError(error instanceof Error ? error.message : "The reconstruction service could not be reached.")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [bundle.status, filterKey])
+
+  const results = bundle.status === "ready" ? (remote ?? []) : localResults
   const people = useMemo(() => {
     const names = new Set(records.flatMap((record) => record.people))
     return [...names].sort((a, b) => a.localeCompare(b))
@@ -52,6 +90,8 @@ export function useContextSearch() {
   return {
     filters,
     results,
+    searching: bundle.status === "ready" && filters.query.trim().length > 0 && remote === null && !searchError,
+    searchError,
     selected,
     people,
     statuses,

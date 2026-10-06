@@ -10,9 +10,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { contextEdges } from "@/data/context-graph"
+import { DataNotice } from "@/components/common/data-notice"
 import { useContextGraph } from "@/hooks/use-context-graph"
 import { useMinWidth } from "@/hooks/use-media"
+import { useProjectBundle } from "@/services/api/bundle"
 export function GraphPage() {
   return (
     <ReactFlowProvider>
@@ -22,13 +23,17 @@ export function GraphPage() {
 }
 
 function GraphWorkspace() {
+  const bundle = useProjectBundle()
   const graph = useContextGraph()
   const desktop = useMinWidth(1024)
   const { fitView } = useReactFlow()
+  if (bundle.status === "loading") return <DataNotice status="loading" />
+  if (bundle.status === "error") return <DataNotice status="error" message={bundle.message} />
   const projectName = graph.projects.find((item) => item.id === graph.activeFilters.projectId)?.name
 
   return (
     <div className="flex h-[calc(100svh-4rem)] min-h-[28rem] flex-col">
+      {bundle.status === "demo" ? <DataNotice status="demo" /> : null}
       <GraphToolbar graph={graph} onFit={() => void fitView({ padding: 0.12, duration: 180 })} />
       <div className="relative min-h-0 flex-1">
         <ContextGraph graph={graph} />
@@ -72,7 +77,8 @@ function Detail({ graph }: { graph: ReturnType<typeof useContextGraph> }) {
     return (
       <NodeDetailPanel
         node={graph.selectedNode}
-        edges={contextEdges}
+        nodes={graph.nodes}
+        edges={graph.edges}
         traceMode={graph.traceMode}
         canTraceWhy={graph.canTraceWhy}
         canTraceImpact={graph.canTraceImpact}
@@ -82,7 +88,7 @@ function Detail({ graph }: { graph: ReturnType<typeof useContextGraph> }) {
     )
   }
   if (graph.selectedEdge) {
-    return <EdgeDetailPanel edge={graph.selectedEdge} onSelectNode={(id) => graph.selectNode(id, true)} />
+    return <EdgeDetailPanel edge={graph.selectedEdge} nodes={graph.nodes} onSelectNode={(id) => graph.selectNode(id, true)} />
   }
   return null
 }

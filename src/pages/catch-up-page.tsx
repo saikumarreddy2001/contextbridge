@@ -5,11 +5,13 @@ import { CatchUpProgress } from "@/components/catchup/catch-up-progress"
 import { EvidencePanel } from "@/components/catchup/evidence-panel"
 import { StoryNavigator } from "@/components/catchup/story-navigator"
 import { StoryView } from "@/components/catchup/story-view"
+import { DataNotice } from "@/components/common/data-notice"
 import { EmptyWorkspace } from "@/components/common/empty-workspace"
 import { PageContainer } from "@/components/common/page-container"
 import { catchUpWindow, completionSummary } from "@/data/catch-up-stories"
 import { countProjectActivities } from "@/data/selectors"
 import { useCatchUp } from "@/hooks/use-catch-up"
+import { useProjectBundle } from "@/services/api/bundle"
 import { useMinWidth } from "@/hooks/use-media"
 import { useProject, useWorkspace } from "@/hooks/use-selection"
 
@@ -24,8 +26,11 @@ export function CatchUpPage() {
 }
 
 function AtlasCatchUp({ projectId }: { projectId: string }) {
+  const bundle = useProjectBundle()
   const catchUp = useCatchUp(projectId)
   const desktop = useMinWidth(1024)
+  if (bundle.status === "loading") return <DataNotice status="loading" />
+  if (bundle.status === "error") return <DataNotice status="error" message={bundle.message} />
   const activityCount = countProjectActivities(projectId)
   const item = catchUp.selectedCatchUpItem
 
@@ -36,6 +41,7 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
 
   return (
     <div className="pb-16">
+      {bundle.status === "demo" ? <DataNotice status="demo" /> : null}
       {catchUp.mode === "intro" ? (
         <CatchUpIntro
           activityCount={activityCount}

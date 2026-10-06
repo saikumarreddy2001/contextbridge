@@ -1,14 +1,22 @@
+import { DataNotice } from "@/components/common/data-notice"
 import { SearchFilters } from "@/components/search/search-filters"
 import { SearchResults } from "@/components/search/search-results"
 import { useContextSearch } from "@/hooks/use-context-search"
+import { useProjectBundle } from "@/services/api/bundle"
 
 export function ContextSearch() {
+  const bundle = useProjectBundle()
   const search = useContextSearch()
   const query = search.filters.query.trim()
+  if (bundle.status === "loading") return <DataNotice status="loading" />
+  if (bundle.status === "error" || search.searchError) {
+    return <DataNotice status="error" message={search.searchError ?? bundle.message} />
+  }
   const countLabel = `${search.results.length} ${search.results.length === 1 ? "result" : "results"}`
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
+      {bundle.status === "demo" ? <DataNotice status="demo" /> : null}
       <div>
         <h1 className="text-lg font-medium tracking-tight">Search</h1>
         <p className="mt-1 text-sm text-muted-foreground">Project Atlas, September 16–23.</p>
@@ -41,7 +49,9 @@ export function ContextSearch() {
         onStatus={search.setStatus}
         onDate={search.setDateRange}
       />
-      <p className="text-sm text-muted-foreground">{query ? countLabel : "Enter a query to search the Atlas story."}</p>
+      <p className="text-sm text-muted-foreground">
+        {search.searching ? "Searching the Project Atlas reconstruction." : query ? countLabel : "Enter a query to search the Atlas story."}
+      </p>
       {query && search.results.length === 0 ? (
         <p className="text-sm text-muted-foreground">No matches for “{search.filters.query}” with these filters.</p>
       ) : null}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import { guidedItemsForProject, itemBySlug, itemsForProject } from "@/data/catch-up-stories"
+import { itemsForProject } from "@/data/catch-up-stories"
+import { useProjectBundle } from "@/services/api/bundle"
 import type { CatchUpFilter, CatchUpItem, Evidence } from "@/types"
 
 export type CatchUpMode = "intro" | "guided" | "story" | "all" | "complete"
@@ -12,6 +13,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function useCatchUp(projectId: string) {
+  const bundle = useProjectBundle()
   const [params, setParams] = useSearchParams()
   const [viewedIds, setViewedIds] = useState<string[]>([])
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(null)
@@ -21,9 +23,12 @@ export function useCatchUp(projectId: string) {
 
   const view = params.get("view")
   const slug = params.get("story")
-  const items = itemsForProject(projectId)
-  const guidedItems = guidedItemsForProject(projectId)
-  const selectedCatchUpItem = slug ? itemBySlug(projectId, slug) : undefined
+  const items =
+    bundle.status === "ready" && bundle.data
+      ? bundle.data.catchUpItems.filter((item) => item.projectId === projectId)
+      : itemsForProject(projectId)
+  const guidedItems = items.filter((item) => item.guided)
+  const selectedCatchUpItem = slug ? items.find((item) => item.slug === slug) : undefined
   const guidedIndex = selectedCatchUpItem
     ? guidedItems.findIndex((item) => item.id === selectedCatchUpItem.id)
     : -1
@@ -45,7 +50,7 @@ export function useCatchUp(projectId: string) {
   useEffect(() => {
     if (mode !== "guided" || !selectedCatchUpItem) return
     const current = selectedCatchUpItem
-    const sequence = guidedItemsForProject(projectId)
+    const sequence = guidedItems
 
     function onKeyDown(event: KeyboardEvent) {
       if (isEditableTarget(event.target)) return
@@ -76,7 +81,7 @@ export function useCatchUp(projectId: string) {
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [mode, selectedCatchUpItem, evidencePanelOpen, projectId, setParams])
+  }, [mode, selectedCatchUpItem, evidencePanelOpen, guidedItems, setParams])
 
   function openItem(nextSlug: string) {
     setEvidencePanelOpen(false)

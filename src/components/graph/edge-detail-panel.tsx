@@ -1,18 +1,19 @@
 import { useEffect, useRef } from "react"
-import { contextNodes } from "@/data/context-graph"
-import type { ContextEdge } from "@/types"
+import type { ContextEdge, ContextNode } from "@/types"
 import { nodeTypeLabel } from "@/utils/context-graph"
 
 export function EdgeDetailPanel({
   edge,
+  nodes,
   onSelectNode,
 }: {
   edge: ContextEdge
+  nodes: ContextNode[]
   onSelectNode: (id: string) => void
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const source = contextNodes.find((node) => node.id === edge.source)
-  const target = contextNodes.find((node) => node.id === edge.target)
+  const source = nodes.find((node) => node.id === edge.source)
+  const target = nodes.find((node) => node.id === edge.target)
 
   useEffect(() => {
     headingRef.current?.focus()

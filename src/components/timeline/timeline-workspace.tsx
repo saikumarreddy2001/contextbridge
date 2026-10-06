@@ -3,21 +3,28 @@ import { TimelineBoard, TimelineChronology } from "@/components/timeline/timelin
 import { TimelineDetailPanel } from "@/components/timeline/timeline-detail-panel"
 import { TimelineToolbar } from "@/components/timeline/timeline-toolbar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { DataNotice } from "@/components/common/data-notice"
 import { useTimeline } from "@/hooks/use-timeline"
 import { useMinWidth } from "@/hooks/use-media"
+import { useProjectBundle } from "@/services/api/bundle"
 
 export function TimelineWorkspace() {
+  const bundle = useProjectBundle()
   const timeline = useTimeline()
   const desktop = useMinWidth(1024)
   const focusId = timeline.focusedEvent?.id
 
   useEffect(() => {
-    if (!focusId) return
+    if (!focusId || bundle.status === "loading" || bundle.status === "error") return
     document.getElementById(`timeline-event-${focusId}`)?.scrollIntoView({ block: "nearest", inline: "center" })
-  }, [focusId])
+  }, [focusId, bundle.status])
+
+  if (bundle.status === "loading") return <DataNotice status="loading" />
+  if (bundle.status === "error") return <DataNotice status="error" message={bundle.message} />
 
   return (
     <div className="flex h-[calc(100svh-4rem)] min-h-[28rem] flex-col">
+      {bundle.status === "demo" ? <DataNotice status="demo" /> : null}
       <TimelineToolbar timeline={timeline} />
       <div className="relative min-h-0 flex-1">
         {desktop ? (

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import { contextEdges, contextNodes } from "@/data/context-graph"
 import { useProject } from "@/hooks/use-selection"
+import { useProjectBundle } from "@/services/api/bundle"
 import type { ContextEdge, ContextNode, GraphFilters, GraphKindFilter } from "@/types"
 import {
   layoutNodes,
@@ -30,6 +31,9 @@ const defaultFilters = (projectId: string): GraphFilters => ({
 })
 
 export function useContextGraph() {
+  const bundle = useProjectBundle()
+  const sourceNodes = bundle.status === "ready" && bundle.data ? bundle.data.nodes : bundle.status === "demo" ? contextNodes : []
+  const sourceEdges = bundle.status === "ready" && bundle.data ? bundle.data.edges : bundle.status === "demo" ? contextEdges : []
   const { project, projects, setProject } = useProject()
   const [params] = useSearchParams()
   const focus = params.get("focus")
@@ -48,9 +52,9 @@ export function useContextGraph() {
     setActiveFilters((current) => ({ ...current, projectId: project.id }))
   }
 
-  if (focus && focus !== appliedFocus) {
+  if (focus && focus !== appliedFocus && sourceNodes.length > 0) {
     setAppliedFocus(focus)
-    if (contextNodes.some((node) => node.id === focus)) {
+    if (sourceNodes.some((node) => node.id === focus)) {
       setSelectedNodeId(focus)
       setSelectedEdgeId(null)
       setFitNodeId(focus)
@@ -58,18 +62,18 @@ export function useContextGraph() {
   }
 
   const visibleNodes = useMemo(
-    () => contextNodes.filter((node) => nodeMatchesFilters(node, activeFilters)),
-    [activeFilters],
+    () => sourceNodes.filter((node) => nodeMatchesFilters(node, activeFilters)),
+    [sourceNodes, activeFilters],
   )
 
   const tracePath = useMemo(() => {
     if (!traceMode || !traceOriginId) return []
-    return traceMode === "why" ? traceWhy(traceOriginId, contextEdges) : traceImpact(traceOriginId, contextEdges)
-  }, [traceMode, traceOriginId])
+    return traceMode === "why" ? traceWhy(traceOriginId, sourceEdges) : traceImpact(traceOriginId, sourceEdges)
+  }, [traceMode, traceOriginId, sourceEdges])
 
   const selectedNode = visibleNodes.find((node) => node.id === selectedNodeId) ?? null
   const selectedEdge =
-    contextEdges.find(
+    sourceEdges.find(
       (edge) =>
         edge.id === selectedEdgeId &&
         visibleNodes.some((node) => node.id === edge.source) &&
@@ -79,12 +83,12 @@ export function useContextGraph() {
   const neighborIds = useMemo(() => {
     const ids = new Set<string>()
     if (!selectedNode) return ids
-    for (const edge of contextEdges) {
+    for (const edge of sourceEdges) {
       if (edge.source === selectedNode.id) ids.add(edge.target)
       if (edge.target === selectedNode.id) ids.add(edge.source)
     }
     return ids
-  }, [selectedNode])
+  }, [selectedNode, sourceEdges])
 
   function emphasisFor(node: ContextNode): ContextNodeData["emphasis"] {
     if (tracePath.length > 0) {
@@ -103,15 +107,15 @@ export function useContextGraph() {
   function clearSelectionIfHidden(filters: GraphFilters) {
     setSelectedNodeId((current) => {
       if (!current) return current
-      const node = contextNodes.find((item) => item.id === current)
+      const node = sourceNodes.find((item) => item.id === current)
       return node && nodeMatchesFilters(node, filters) ? current : null
     })
     setSelectedEdgeId((current) => {
       if (!current) return current
-      const edge = contextEdges.find((item) => item.id === current)
+      const edge = sourceEdges.find((item) => item.id === current)
       if (!edge) return null
-      const source = contextNodes.find((item) => item.id === edge.source)
-      const target = contextNodes.find((item) => item.id === edge.target)
+      const source = sourceNodes.find((item) => item.id === edge.source)
+      const target = sourceNodes.find((item) => item.id === edge.target)
       if (!source || !target || !nodeMatchesFilters(source, filters) || !nodeMatchesFilters(target, filters)) {
         return null
       }
@@ -154,18 +158,18 @@ export function useContextGraph() {
   const panelOpen = Boolean(selectedNode || selectedEdge)
 
   const flow = useMemo(() => {
-    const positions = layoutNodes(contextNodes, contextEdges)
+    const positions = layoutNodes(sourceNodes, sourceEdges)
     const visibleIds = new Set(visibleNodes.map((node) => node.id))
     const searching = searchQuery.trim().length > 0
     const nodes = toFlowNodes(visibleNodes, positions, (id) => {
       const node = visibleNodes.find((item) => item.id === id)
       return node ? emphasisFor(node) : "normal"
     })
-    const edges = toFlowEdges(contextEdges, visibleIds, (edge) =>
+    const edges = toFlowEdges(sourceEdges, visibleIds, (edge) =>
       edgeIsActive(edge, traceMode, tracePath, selectedNode, selectedEdge, searching),
     )
     return { nodes, edges }
-  }, [visibleNodes, searchQuery, traceMode, tracePath, selectedNode, selectedEdge, neighborIds])
+  }, [visibleNodes, sourceNodes, sourceEdges, searchQuery, traceMode, tracePath, selectedNode, selectedEdge, neighborIds])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -191,8 +195,8 @@ export function useContextGraph() {
     : []
 
   return {
-    nodes: contextNodes,
-    edges: contextEdges,
+    nodes: sourceNodes,
+    edges: sourceEdges,
     flowNodes: flow.nodes,
     flowEdges: flow.edges,
     visibleNodes,
@@ -222,8 +226,8 @@ export function useContextGraph() {
     closePanel,
     startTrace,
     exitTrace,
-    canTraceWhy: selectedNode ? traceWhy(selectedNode.id, contextEdges).length > 1 : false,
-    canTraceImpact: selectedNode ? traceImpact(selectedNode.id, contextEdges).length > 1 : false,
+    canTraceWhy: selectedNode ? traceWhy(selectedNode.id, sourceEdges).length > 1 : false,
+    canTraceImpact: selectedNode ? traceImpact(selectedNode.id, sourceEdges).length > 1 : false,
   }
 }
 

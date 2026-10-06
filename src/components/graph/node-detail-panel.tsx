@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { TraceControls } from "@/components/graph/trace-controls"
 import { Button } from "@/components/ui/button"
-import { contextNodes } from "@/data/context-graph"
 import { timelineEventIdForNode } from "@/data/timeline"
 import { projects } from "@/data/projects"
 import type { TraceMode } from "@/hooks/use-context-graph"
@@ -11,6 +10,7 @@ import { formatGraphDate, nodeTypeLabel, relationshipIncoming, relationshipOutgo
 
 export function NodeDetailPanel({
   node,
+  nodes,
   edges,
   traceMode,
   canTraceWhy,
@@ -19,6 +19,7 @@ export function NodeDetailPanel({
   onExitTrace,
 }: {
   node: ContextNode
+  nodes: ContextNode[]
   edges: ContextEdge[]
   traceMode: TraceMode | null
   canTraceWhy: boolean
@@ -79,8 +80,8 @@ export function NodeDetailPanel({
             </div>
           ) : null}
         </dl>
-        <RelationshipList title="Incoming relationships" edges={incoming} direction="incoming" />
-        <RelationshipList title="Outgoing relationships" edges={outgoing} direction="outgoing" />
+        <RelationshipList title="Incoming relationships" edges={incoming} nodes={nodes} direction="incoming" />
+        <RelationshipList title="Outgoing relationships" edges={outgoing} nodes={nodes} direction="outgoing" />
         <TraceControls
           traceMode={traceMode}
           canTraceWhy={canTraceWhy}
@@ -93,17 +94,15 @@ export function NodeDetailPanel({
   )
 }
 
-function titleFor(id: string): string {
-  return contextNodes.find((node) => node.id === id)?.title ?? id
-}
-
 function RelationshipList({
   title,
   edges,
+  nodes,
   direction,
 }: {
   title: string
   edges: ContextEdge[]
+  nodes: ContextNode[]
   direction: "incoming" | "outgoing"
 }) {
   if (edges.length === 0) return null
@@ -113,12 +112,13 @@ function RelationshipList({
       <ul className="mt-2 space-y-3">
         {edges.map((edge) => {
           const other = direction === "incoming" ? edge.source : edge.target
+          const otherTitle = nodes.find((item) => item.id === other)?.title ?? other
           const prefix = direction === "incoming" ? relationshipIncoming[edge.relationshipType] : relationshipOutgoing[edge.relationshipType]
           return (
             <li key={edge.id} className="text-sm leading-relaxed">
               <p>
                 <span className="font-medium">
-                  {prefix}: {titleFor(other)}
+                  {prefix}: {otherTitle}
                 </span>
               </p>
               <p className="text-muted-foreground">{edge.description}</p>

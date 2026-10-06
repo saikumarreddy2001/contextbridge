@@ -2,13 +2,17 @@
 
 ContextBridge reconstructs scattered workplace context for Northstar Technologies. The shell and Overview are in place. `/catch-up` walks the September 16–23 Atlas story.
 
-Alex Morgan, Senior Product Engineer, was away for 8 working days. Overview shows what changed on Project Atlas: the Auth0 decision, the September 22 revision, and the payment sandbox blocker. There is no backend.
+Alex Morgan, Senior Product Engineer, was away for 8 working days. Overview shows what changed on Project Atlas: the Auth0 decision, the September 22 revision, and the payment sandbox blocker.
+
+Catch-up, the context graph, the timeline, and search read a deterministic FastAPI reconstruction of raw Atlas events. If that service is down, each of those screens explains the failure and can switch to the saved demo data.
 
 ## Run locally
 
+Frontend:
+
 ```bash
 npm install
-npm run dev
+npm run dev -- --host 0.0.0.0 --port 43123
 ```
 
 The dev server binds to `0.0.0.0:43123`. Open [http://127.0.0.1:43123](http://127.0.0.1:43123). `/` redirects to `/overview`.
@@ -16,6 +20,24 @@ The dev server binds to `0.0.0.0:43123`. Open [http://127.0.0.1:43123](http://12
 ```bash
 npm run build
 ```
+
+Backend (port 8077, not 43123):
+
+```bash
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8077
+```
+
+Tests:
+
+```bash
+cd backend
+.venv/bin/pytest
+```
+
+CORS allows `http://127.0.0.1:43123` and `http://localhost:43123`. Override the API origin with `VITE_API_URL` if needed. Response shapes are documented in `backend/README.md`.
 
 ## Routes
 

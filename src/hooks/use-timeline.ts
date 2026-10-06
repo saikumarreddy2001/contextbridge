@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom"
 import { projectPeriod, storyLanes } from "@/data/timeline"
 import { projects } from "@/data/projects"
 import { useProject } from "@/hooks/use-selection"
+import { useProjectBundle } from "@/services/api/bundle"
 import type { TimelineDateRange, TimelineFilters, TimelineKindFilter } from "@/types"
 import {
   eventMatchesFilters,
@@ -19,6 +20,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function useTimeline() {
+  const bundle = useProjectBundle()
   const { project, projects: workspaceProjects, setProject } = useProject()
   const [params, setParams] = useSearchParams()
   const focusId = params.get("focus")
@@ -33,7 +35,12 @@ export function useTimeline() {
     person,
   }
 
-  const events = useMemo(() => resolveTimelineEvents(), [])
+  const events = useMemo(() => {
+    if (bundle.status === "ready" && bundle.data) return bundle.data.events
+    if (bundle.status === "demo") return resolveTimelineEvents()
+    return []
+  }, [bundle])
+  const laneSource = bundle.status === "ready" && bundle.data ? bundle.data.lanes : storyLanes
   const periodEvents = useMemo(
     () => events.filter((event) => eventMatchesFilters(event, filters, dateRange)),
     [events, filters, dateRange],
@@ -51,11 +58,11 @@ export function useTimeline() {
 
   const lanes = useMemo(
     () =>
-      storyLanes.map((lane) => ({
+      laneSource.map((lane) => ({
         ...lane,
         events: laneEvents(visibleEvents, lane.id),
       })),
-    [visibleEvents],
+    [visibleEvents, laneSource],
   )
 
   useEffect(() => {
