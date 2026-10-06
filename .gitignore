@@ -15,6 +15,8 @@ dist-ssr
 backend/.venv
 backend/app/data/embedding-index.json
 .env
+.firebase
+.firebaserc
 __pycache__/
 .pytest_cache/
 *.pyc

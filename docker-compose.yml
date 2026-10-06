@@ -1,0 +1,11 @@
+# Local API only. This does not deploy and does not create a cloud resource.
+services:
+  api:
+    build:
+      context: ./backend
+    ports:
+      - "8077:8080"
+    environment:
+      PORT: "8080"
+      AI_PROVIDER: none
+      ENVIRONMENT: development

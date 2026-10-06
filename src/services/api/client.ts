@@ -1,5 +1,6 @@
-const env = import.meta.env as ImportMetaEnv & { VITE_API_URL?: string }
-const API_ORIGIN = env.VITE_API_URL ?? "http://127.0.0.1:8077"
+const env = import.meta.env as ImportMetaEnv & { VITE_API_BASE_URL?: string }
+const configured = env.VITE_API_BASE_URL?.replace(/\/$/, "")
+const API_ORIGIN = configured || "http://127.0.0.1:8077"
 
 export function apiUrl(path: string): string {
   return `${API_ORIGIN}${path}`

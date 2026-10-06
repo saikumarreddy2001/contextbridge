@@ -20,6 +20,16 @@ class AIProvider(Protocol):
     def create_embedding(self, text: str) -> list[float]: ...
 
 
+def provider_will_run() -> bool:
+    """True only when a provider would be constructed. Does not call the provider."""
+    name = os.environ.get("AI_PROVIDER", "none").strip().lower() or "none"
+    if name == "mock":
+        return True
+    if name in {"openai", "gemini"}:
+        return bool(os.environ.get("AI_API_KEY", "").strip())
+    return False
+
+
 def get_provider() -> AIProvider | None:
     """Return the configured provider. `none` returns None so methods are not called."""
     name = os.environ.get("AI_PROVIDER", "none").strip().lower() or "none"
@@ -39,6 +49,16 @@ def get_provider() -> AIProvider | None:
 
         model = os.environ.get("AI_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
         return OpenAIProvider(api_key=key, model=model)
+    if name == "gemini":
+        key = os.environ.get("AI_API_KEY", "").strip()
+        if not key:
+            started = time.perf_counter()
+            log_ai("provider", "gemini", started, success=False, fallback=True)
+            return None
+        from app.services.ai.gemini import DEFAULT_GEMINI_MODEL, GeminiProvider
+
+        model = os.environ.get("AI_MODEL", "").strip() or DEFAULT_GEMINI_MODEL
+        return GeminiProvider(api_key=key, model=model)
     started = time.perf_counter()
     log_ai("provider", name, started, success=False, fallback=True)
     return None

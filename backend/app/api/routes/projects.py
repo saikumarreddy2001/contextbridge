@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from app.repositories.event_repository import canonical_project_id
-from app.services.ai.service import ask, enrich_catch_up, enrich_graph, explain_change, story_summary
 from app.services.ai.hybrid import hybrid_search
+from app.services.ai.limits import MAX_QUESTION_LENGTH, allow
+from app.services.ai.service import ask, enrich_catch_up, enrich_graph, explain_change, story_summary
 from app.services.reconstruction.pipeline import catch_up_response, graph_response, search_response, timeline_response
 
 router = APIRouter()
@@ -14,6 +15,18 @@ def _known(project_id: str) -> str:
     if canonical != "project-atlas":
         raise HTTPException(status_code=404, detail="Unknown project")
     return canonical
+
+
+def _guard(request: Request, question: str | None = None) -> None:
+    if question is not None and len(question) > MAX_QUESTION_LENGTH:
+        raise HTTPException(status_code=400, detail="That question is too long.")
+    ip = request.client.host if request.client else "unknown"
+    if not allow(ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many AI requests. Try again shortly.",
+            headers={"Retry-After": "60"},
+        )
 
 
 @router.get("/projects/{project_id}/catch-up")
@@ -73,8 +86,9 @@ class AskBody(BaseModel):
 
 
 @router.post("/projects/{project_id}/explain-change/{change_id}")
-def explain(project_id: str, change_id: str) -> dict:
+def explain(project_id: str, change_id: str, request: Request) -> dict:
     _known(project_id)
+    _guard(request)
     payload = explain_change(project_id, change_id)
     if payload is None:
         raise HTTPException(status_code=404, detail="Unknown change")
@@ -82,14 +96,16 @@ def explain(project_id: str, change_id: str) -> dict:
 
 
 @router.post("/projects/{project_id}/ask")
-def ask_context(project_id: str, body: AskBody) -> dict:
+def ask_context(project_id: str, body: AskBody, request: Request) -> dict:
     _known(project_id)
+    _guard(request, body.question)
     return ask(project_id, body.question, [turn.model_dump() for turn in body.history])
 
 
 @router.get("/projects/{project_id}/stories/{story_id}/summary")
-def summary(project_id: str, story_id: str) -> dict:
+def summary(project_id: str, story_id: str, request: Request) -> dict:
     _known(project_id)
+    _guard(request)
     payload = story_summary(project_id, story_id)
     if payload is None:
         raise HTTPException(status_code=404, detail="Unknown story")

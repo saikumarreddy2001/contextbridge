@@ -2,7 +2,11 @@
 
 Deterministic pipeline: raw workplace events become normalized events, entities, relationships, stories, and ranked changes. An optional AI layer can explain those results. It does not replace the pipeline.
 
-`AI_PROVIDER=none` (the default in `.env.example`) does not call a model. `AI_PROVIDER=mock` is deterministic and offline. `AI_PROVIDER=openai` uses `AI_API_KEY` and `AI_MODEL` on the server only. A missing key falls back to `none` for that request.
+`AI_PROVIDER=none` (the default in `.env.example`) does not call a model. `AI_PROVIDER=mock` is deterministic and offline. `AI_PROVIDER=openai` and `AI_PROVIDER=gemini` use `AI_API_KEY` and `AI_MODEL` on the server only. A missing key falls back to `none` for that request. Gemini embeddings stay on the local concept vector.
+
+`GET /health` returns `{"status":"healthy","service":"contextbridge-api"}` and does not call a provider. `GET /api/health` still returns `{"status":"ok"}`. `GET /api/capabilities` reports whether a provider will actually run. The container listens on `$PORT` (default 8080). Local uvicorn stays on 8077.
+
+Dev CORS allows `http://127.0.0.1:43123` and `http://localhost:43123`. `ENVIRONMENT=production` uses `ALLOWED_ORIGINS` and drops `*`.
 
 ## Run
 
@@ -18,7 +22,7 @@ From this directory:
 .venv/bin/pytest
 ```
 
-The Vite app on port 43123 calls this origin. CORS allows only `http://127.0.0.1:43123` and `http://localhost:43123`.
+The Vite app on port 43123 calls this origin through `VITE_API_BASE_URL`.
 
 `atlas` and `project-atlas` are the same project.
 

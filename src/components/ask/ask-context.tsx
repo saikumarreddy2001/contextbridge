@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { SourceDetail } from "@/components/catchup/source-detail"
 import { Button } from "@/components/ui/button"
 import { useAsk } from "@/hooks/use-ask"
+import { useCapabilities } from "@/hooks/use-capabilities"
 import { nodeExists } from "@/utils/history"
 
 const suggestions = [
@@ -14,6 +15,7 @@ const suggestions = [
 
 export function AskContext() {
   const ask = useAsk()
+  const ai = useCapabilities()
   const [draft, setDraft] = useState("")
   const [evidenceId, setEvidenceId] = useState<string | null>(null)
   const response = ask.response
@@ -25,6 +27,11 @@ export function AskContext() {
       <div>
         <h1 className="text-2xl font-medium tracking-tight">Ask Project Atlas</h1>
         <p className="mt-2 text-sm text-muted-foreground">September 16–23. Answers stay tied to the project record.</p>
+        {ai === false ? (
+          <p className="mt-3 text-sm leading-relaxed">
+            AI reasoning is unavailable. Catch-up, the graph, the timeline, and search still work.
+          </p>
+        ) : null}
       </div>
       <form
         className="flex flex-col gap-3"

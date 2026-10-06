@@ -47,6 +47,16 @@ export interface AskResponse {
   graphNodeId?: string | null
 }
 
+export interface Capabilities {
+  ai: boolean
+  semanticSearch: boolean
+  contextReconstruction: boolean
+}
+
+export function fetchCapabilities(): Promise<Capabilities> {
+  return apiGet("/api/capabilities")
+}
+
 export function explainChange(changeId: string): Promise<ChangeExplanation> {
   return apiPost(`/api/projects/${atlasApiProject}/explain-change/${changeId}`, {})
 }
