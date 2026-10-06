@@ -23,10 +23,10 @@ npm run build
 | --- | --- |
 | `/overview` | Overview dashboard |
 | `/catch-up` | What you missed |
-| `/timeline` | Timeline preview |
+| `/timeline` | Timeline |
 | `/graph` | Context Graph |
 | `/decisions` | Decisions preview |
 | `/sources` | Sources preview |
-| `/search` | Search preview |
+| `/search` | Project search |
 | `/settings` | Settings, including theme |
 | `/help` | Help |

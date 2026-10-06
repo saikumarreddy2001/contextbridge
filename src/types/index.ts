@@ -266,3 +266,60 @@ export interface GraphFilters {
   from: string
   to: string
 }
+
+export type TimelineLaneId = "authentication" | "payment" | "api-contract"
+
+export interface TimelineLane {
+  id: TimelineLaneId
+  title: string
+  summary: string
+  from: string
+  to: string
+}
+
+/** Graph node types, plus the catch-up task kind for work that is not a Jira node. */
+export type TimelineEventType = Exclude<ContextNodeType, "person"> | Extract<CatchUpKind, "task">
+
+export type TimelineKindFilter =
+  | "all"
+  | "decisions"
+  | "requirements"
+  | "tasks"
+  | "code"
+  | "meetings"
+  | "problems"
+  | "blockers"
+  | "discussions"
+
+export interface TimelineEventRef {
+  id: string
+  storyLaneId: TimelineLaneId
+  graphNodeId?: string
+  catchUpItemId?: string
+  /** ISO date when the catch-up item date is a due date, not the day the event happened. */
+  date?: string
+  type?: TimelineEventType
+  sourceIds: string[]
+  relatedEventIds: string[]
+}
+
+export interface TimelineDateRange {
+  from: string
+  to: string
+}
+
+export interface TimelineFilters {
+  kind: TimelineKindFilter
+  projectId: string
+  person: string
+}
+
+export interface SearchFilters {
+  query: string
+  type: string
+  projectId: string
+  person: string
+  status: string
+  from: string
+  to: string
+}

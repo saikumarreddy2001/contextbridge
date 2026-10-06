@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react"
+import { Link } from "react-router-dom"
 import { TraceControls } from "@/components/graph/trace-controls"
+import { Button } from "@/components/ui/button"
 import { contextNodes } from "@/data/context-graph"
+import { timelineEventIdForNode } from "@/data/timeline"
 import { projects } from "@/data/projects"
 import type { TraceMode } from "@/hooks/use-context-graph"
 import type { ContextEdge, ContextNode } from "@/types"
@@ -45,6 +48,13 @@ export function NodeDetailPanel({
           {node.status}
         </p>
         <p className="mt-3 text-sm leading-relaxed">{node.description}</p>
+        {timelineEventIdForNode(node.id) ? (
+          <div className="mt-4">
+            <Button variant="outline" className="min-h-11" asChild>
+              <Link to={`/timeline?focus=${timelineEventIdForNode(node.id)}`}>View in Timeline</Link>
+            </Button>
+          </div>
+        ) : null}
         <dl className="mt-4 space-y-3 text-sm">
           <div>
             <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Project</dt>
