@@ -16,6 +16,7 @@ export function StoryHeader({ item }: { item: CatchUpItem }) {
         <span>{priorityLabels[item.priority]}</span>
       </p>
       <h1 className="mt-2 text-2xl font-medium tracking-tight sm:text-3xl">{item.title}</h1>
+      {item.aiSummary ? <p className="mt-2 max-w-3xl text-sm leading-relaxed">{item.aiSummary}</p> : null}
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">{item.summary}</p>
     </header>
   )

@@ -45,6 +45,17 @@ export function SearchResultItem({
         <span aria-hidden="true"> · </span>
         {record.sourceLabel}
       </p>
+      {record.scoreBreakdown ? (
+        <p className="mt-1 text-xs text-muted-foreground">
+          Keyword {record.scoreBreakdown.keyword.toFixed(2)}
+          <span aria-hidden="true"> · </span>
+          Semantic {record.scoreBreakdown.semantic.toFixed(2)}
+          <span aria-hidden="true"> · </span>
+          Importance {record.scoreBreakdown.importance.toFixed(2)}
+          <span aria-hidden="true"> · </span>
+          Recency {record.scoreBreakdown.recency.toFixed(2)}
+        </p>
+      ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button type="button" variant="outline" className="min-h-11" aria-expanded={expanded} onClick={() => onToggle(record.id)}>
           View Details

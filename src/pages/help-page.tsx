@@ -7,6 +7,7 @@ const topics = [
   ["Context Graph", "How a requirement connects to the decision that replaced it."],
   ["Decisions", "What was chosen, why, and when it changed."],
   ["Sources", "The meetings, tickets, pull requests, documents, and discussions underneath."],
+  ["Ask Context", "A question about Project Atlas, answered from the records with the evidence beside it."],
 ]
 
 export function HelpPage() {

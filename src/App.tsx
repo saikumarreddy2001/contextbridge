@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { AppShell } from "@/layout/app-shell"
+import { AskPage } from "@/pages/ask-page"
 import { CatchUpPage } from "@/pages/catch-up-page"
 import { DecisionsPage } from "@/pages/decisions-page"
 import { GraphPage } from "@/pages/graph-page"
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="decisions" element={<DecisionsPage />} />
           <Route path="sources" element={<SourcesPage />} />
           <Route path="search" element={<SearchPage />} />
+          <Route path="ask" element={<AskPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="help" element={<HelpPage />} />
           <Route path="*" element={<NotFoundPage />} />

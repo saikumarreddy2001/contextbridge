@@ -118,7 +118,7 @@ function ItemBody({
         </p>
       ) : null}
       {item.reason ? (
-        <WhyChanged reason={item.reason} open={expandedReason} onToggle={onToggleReason} />
+        <WhyChanged reason={item.reason} changeId={item.id} open={expandedReason} onToggle={onToggleReason} />
       ) : null}
     </div>
   )

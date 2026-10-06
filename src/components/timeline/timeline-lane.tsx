@@ -1,3 +1,4 @@
+import type { StorySummary } from "@/services/api/ai"
 import type { TimelineDateRange } from "@/types"
 import type { ResolvedTimelineEvent } from "@/utils/history"
 import { eachIsoDay } from "@/utils/history"
@@ -9,11 +10,15 @@ export function TimelineBoard({
   range,
   selectedId,
   onSelect,
+  storySummary,
+  storySummaryLoading,
 }: {
   lanes: { id: string; title: string; summary: string; events: ResolvedTimelineEvent[] }[]
   range: TimelineDateRange
   selectedId: string | null
   onSelect: (id: string) => void
+  storySummary?: StorySummary | null
+  storySummaryLoading?: boolean
 }) {
   const days = eachIsoDay(range.from, range.to)
   if (days.length === 0) {
@@ -33,7 +38,15 @@ export function TimelineBoard({
           </div>
         ))}
         {lanes.map((lane) => (
-          <LaneRow key={lane.id} lane={lane} days={days} selectedId={selectedId} onSelect={onSelect} />
+          <LaneRow
+            key={lane.id}
+            lane={lane}
+            days={days}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            storySummary={storySummary}
+            storySummaryLoading={storySummaryLoading}
+          />
         ))}
       </div>
     </div>
@@ -45,18 +58,24 @@ function LaneRow({
   days,
   selectedId,
   onSelect,
+  storySummary,
+  storySummaryLoading,
 }: {
   lane: { id: string; title: string; summary: string; events: ResolvedTimelineEvent[] }
   days: string[]
   selectedId: string | null
   onSelect: (id: string) => void
+  storySummary?: StorySummary | null
+  storySummaryLoading?: boolean
 }) {
   return (
     <>
       <div data-lane={lane.id} className="border-t py-3 pr-3">
         <h2 className="text-sm font-medium">{lane.title}</h2>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{lane.summary}</p>
-        {lane.id === "authentication" ? <DecisionEvolution /> : null}
+        {lane.id === "authentication" ? (
+          <AuthenticationNotes summary={storySummary} loading={storySummaryLoading} />
+        ) : null}
         {lane.events.length === 0 ? (
           <p className="mt-2 text-xs text-muted-foreground">Nothing in this window.</p>
         ) : null}
@@ -80,11 +99,15 @@ export function TimelineChronology({
   range,
   selectedId,
   onSelect,
+  storySummary,
+  storySummaryLoading,
 }: {
   lanes: { id: string; title: string; summary: string; events: ResolvedTimelineEvent[] }[]
   range: TimelineDateRange
   selectedId: string | null
   onSelect: (id: string) => void
+  storySummary?: StorySummary | null
+  storySummaryLoading?: boolean
 }) {
   const any = lanes.some((lane) => lane.events.length > 0)
   if (!any) return <EmptyWindow range={range} />
@@ -94,7 +117,9 @@ export function TimelineChronology({
         <section key={lane.id} data-lane={lane.id} className="border-b px-3 py-4">
           <h2 className="text-sm font-medium">{lane.title}</h2>
           <p className="mt-1 text-xs text-muted-foreground">{lane.summary}</p>
-          {lane.id === "authentication" ? <DecisionEvolution /> : null}
+          {lane.id === "authentication" ? (
+          <AuthenticationNotes summary={storySummary} loading={storySummaryLoading} />
+        ) : null}
           {lane.events.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">Nothing in this window.</p>
           ) : (
@@ -109,6 +134,44 @@ export function TimelineChronology({
         </section>
       ))}
     </div>
+  )
+}
+
+function AuthenticationNotes({
+  summary,
+  loading,
+}: {
+  summary?: StorySummary | null
+  loading?: boolean
+}) {
+  return (
+    <>
+      <DecisionEvolution />
+      {loading ? <p className="mt-2 text-xs text-muted-foreground">Analyzing project context...</p> : null}
+      {summary?.headline ? (
+        <div className="mt-2 space-y-1 text-xs leading-relaxed">
+          <p>{summary.headline}</p>
+          {summary.keyDecisions && summary.keyDecisions.length > 0 ? (
+            <p>
+              <span className="font-medium">Decisions: </span>
+              {summary.keyDecisions.join("; ")}
+            </p>
+          ) : null}
+          {summary.openQuestions && summary.openQuestions.length > 0 ? (
+            <p>
+              <span className="font-medium">Open: </span>
+              {summary.openQuestions.join("; ")}
+            </p>
+          ) : null}
+          {summary.actionItems && summary.actionItems.length > 0 ? (
+            <p>
+              <span className="font-medium">Affected work: </span>
+              {summary.actionItems.join("; ")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </>
   )
 }
 

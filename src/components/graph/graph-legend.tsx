@@ -1,4 +1,4 @@
-const items = ["Requirement", "Decision", "Task", "Code Change", "Meeting", "Problem", "Blocker"]
+const items = ["Requirement", "Decision", "Task", "Code Change", "Meeting", "Problem", "Blocker", "Dashed: AI inferred"]
 
 export function GraphLegend() {
   return (

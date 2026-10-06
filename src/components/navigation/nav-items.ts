@@ -5,6 +5,7 @@ import {
   Layers,
   LayoutDashboard,
   Scale,
+  MessageSquare,
   Search,
   Settings,
   Waypoints,
@@ -25,6 +26,7 @@ export const primaryNav: NavItem[] = [
   { label: "Decisions", to: "/decisions", icon: Scale },
   { label: "Sources", to: "/sources", icon: Layers },
   { label: "Search", to: "/search", icon: Search },
+  { label: "Ask Context", to: "/ask", icon: MessageSquare },
 ]
 
 export const secondaryNav: NavItem[] = [

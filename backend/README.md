@@ -1,6 +1,8 @@
 # ContextBridge reconstruction
 
-Deterministic pipeline: raw workplace events become normalized events, entities, relationships, stories, and ranked changes. No language model and no embeddings.
+Deterministic pipeline: raw workplace events become normalized events, entities, relationships, stories, and ranked changes. An optional AI layer can explain those results. It does not replace the pipeline.
+
+`AI_PROVIDER=none` (the default in `.env.example`) does not call a model. `AI_PROVIDER=mock` is deterministic and offline. `AI_PROVIDER=openai` uses `AI_API_KEY` and `AI_MODEL` on the server only. A missing key falls back to `none` for that request.
 
 ## Run
 
@@ -47,9 +49,25 @@ The Vite app on port 43123 calls this origin. CORS allows only `http://127.0.0.1
 
 `lanes` (`id`, `title`, `summary`, `from`, `to`) and `events` (`id`, `storyLaneId`, `graphNodeId`, `sourceIds`, `relatedEventIds`, `type`, `title`, `date`, `description`, `status`, `people`, `projectId`, `sources`, `evolution`).
 
-`GET /api/projects/{project_id}/search?q=&type=&person=&status=&start_date=&end_date=`
+`GET /api/projects/{project_id}/search?q=&mode=keyword|hybrid&type=&person=&status=&start_date=&end_date=`
 
-`results` items: `id`, `type`, `title`, `snippet`, `date`, `projectId`, `people`, `status`, `sourceLabel`, `graphNodeId`, `timelineEventId`.
+`mode=keyword` is the Phase 5 match. `mode=hybrid` adds semantic similarity. Each result can include `score` and `scoreBreakdown` (`keyword`, `semantic`, `importance`, `recency`).
+
+`POST /api/projects/{project_id}/explain-change/{change_id}`
+
+`available`, `message`, and when the provider is on: `summary`, `reason`, `whatChanged`, `previousState`, `currentState`, `contributingFactors`, `supportingEventIds`, `confidence`, `evidence`.
+
+`POST /api/projects/{project_id}/ask` with `{ "question", "history": [{ "question", "answer" }] }`
+
+`available`, `insufficientEvidence`, `message`, `answer`, `confidence`, `evidence`, `related`, `graphNodeId`.
+
+`GET /api/projects/{project_id}/stories/{story_id}/summary`
+
+`available`, `headline`, `summary`, `keyDecisions`, `openQuestions`, `actionItems`, `supportingEventIds`, `evidence`.
+
+Keyword `results` items: `id`, `type`, `title`, `snippet`, `date`, `projectId`, `people`, `status`, `sourceLabel`, `graphNodeId`, `timelineEventId`.
+
+Graph edges include `confidenceSource` (`deterministic` or `ai_inferred`). Inferred edges are dashed and never replace a deterministic edge.
 
 `GET /api/context/{node_id}`
 

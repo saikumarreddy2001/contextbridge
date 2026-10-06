@@ -40,6 +40,7 @@ export function ContextSearch() {
         status={search.filters.status}
         from={search.filters.from}
         to={search.filters.to}
+        mode={search.filters.mode}
         projects={search.projects}
         people={search.people}
         statuses={search.statuses}
@@ -48,9 +49,16 @@ export function ContextSearch() {
         onPerson={search.setPerson}
         onStatus={search.setStatus}
         onDate={search.setDateRange}
+        onMode={search.setMode}
       />
       <p className="text-sm text-muted-foreground">
-        {search.searching ? "Searching the Project Atlas reconstruction." : query ? countLabel : "Enter a query to search the Atlas story."}
+        {search.searching
+          ? search.filters.mode === "hybrid"
+            ? "Tracing supporting evidence..."
+            : "Searching the Project Atlas reconstruction."
+          : query
+            ? countLabel
+            : "Enter a query to search the Atlas story."}
       </p>
       {query && search.results.length === 0 ? (
         <p className="text-sm text-muted-foreground">No matches for “{search.filters.query}” with these filters.</p>

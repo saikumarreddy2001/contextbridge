@@ -4,6 +4,7 @@ import { TimelineDetailPanel } from "@/components/timeline/timeline-detail-panel
 import { TimelineToolbar } from "@/components/timeline/timeline-toolbar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { DataNotice } from "@/components/common/data-notice"
+import { useStorySummary } from "@/hooks/use-story-summary"
 import { useTimeline } from "@/hooks/use-timeline"
 import { useMinWidth } from "@/hooks/use-media"
 import { useProjectBundle } from "@/services/api/bundle"
@@ -11,6 +12,7 @@ import { useProjectBundle } from "@/services/api/bundle"
 export function TimelineWorkspace() {
   const bundle = useProjectBundle()
   const timeline = useTimeline()
+  const story = useStorySummary(bundle.status === "ready")
   const desktop = useMinWidth(1024)
   const focusId = timeline.focusedEvent?.id
 
@@ -33,6 +35,8 @@ export function TimelineWorkspace() {
             range={timeline.dateRange}
             selectedId={focusId ?? null}
             onSelect={timeline.selectEvent}
+            storySummary={story.summary}
+            storySummaryLoading={story.status === "loading"}
           />
         ) : (
           <TimelineChronology
@@ -40,6 +44,8 @@ export function TimelineWorkspace() {
             range={timeline.dateRange}
             selectedId={focusId ?? null}
             onSelect={timeline.selectEvent}
+            storySummary={story.summary}
+            storySummaryLoading={story.status === "loading"}
           />
         )}
         {desktop && timeline.selectedEvent ? (

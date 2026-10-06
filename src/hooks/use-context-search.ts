@@ -14,6 +14,7 @@ function readFilters(params: URLSearchParams): SearchFilters {
     status: params.get("status") ?? "all",
     from: params.get("from") ?? "",
     to: params.get("to") ?? "",
+    mode: params.get("mode") === "hybrid" ? "hybrid" : "keyword",
   }
 }
 
@@ -50,6 +51,7 @@ export function useContextSearch() {
     if (current.status !== "all") request.set("status", current.status)
     if (current.from) request.set("start_date", current.from)
     if (current.to) request.set("end_date", current.to)
+    if (current.mode === "hybrid") request.set("mode", "hybrid")
     searchReconstruction(request)
       .then((results) => {
         if (!cancelled) setRemote(results)
@@ -84,6 +86,7 @@ export function useContextSearch() {
     writeParam(next, "status", merged.status, "all")
     writeParam(next, "from", merged.from)
     writeParam(next, "to", merged.to)
+    writeParam(next, "mode", merged.mode, "keyword")
     setParams(next, { replace: true })
   }
 
@@ -113,6 +116,9 @@ export function useContextSearch() {
     },
     setDateRange(from: string, to: string) {
       update({ from, to })
+    },
+    setMode(mode: "keyword" | "hybrid") {
+      update({ mode })
     },
     selectResult(id: string) {
       setSelectedId((current) => (current === id ? null : id))

@@ -11,6 +11,7 @@ export function SearchFilters({
   status,
   from,
   to,
+  mode,
   projects,
   people,
   statuses,
@@ -19,6 +20,7 @@ export function SearchFilters({
   onPerson,
   onStatus,
   onDate,
+  onMode,
 }: {
   type: string
   projectId: string
@@ -26,6 +28,7 @@ export function SearchFilters({
   status: string
   from: string
   to: string
+  mode: "keyword" | "hybrid"
   projects: Project[]
   people: string[]
   statuses: string[]
@@ -34,9 +37,22 @@ export function SearchFilters({
   onPerson: (person: string) => void
   onStatus: (status: string) => void
   onDate: (from: string, to: string) => void
+  onMode: (mode: "keyword" | "hybrid") => void
 }) {
   return (
     <div className="flex flex-wrap gap-2" role="group" aria-label="Search filters">
+      <label className="flex min-h-11 items-center gap-2 text-xs whitespace-nowrap text-muted-foreground">
+        Match
+        <select
+          aria-label="Search mode"
+          value={mode}
+          onChange={(event) => onMode(event.target.value === "hybrid" ? "hybrid" : "keyword")}
+          className={fieldClass}
+        >
+          <option value="keyword">Keyword</option>
+          <option value="hybrid">Hybrid</option>
+        </select>
+      </label>
       <label className="flex min-h-11 items-center gap-2 text-xs whitespace-nowrap text-muted-foreground">
         Type
         <select aria-label="Source type" value={type} onChange={(event) => onType(event.target.value)} className={fieldClass}>

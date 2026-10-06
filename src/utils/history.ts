@@ -42,6 +42,13 @@ export interface SearchRecord {
   sourceLabel: string
   graphNodeId?: string
   timelineEventId?: string
+  score?: number
+  scoreBreakdown?: {
+    keyword: number
+    semantic: number
+    importance: number
+    recency: number
+  }
 }
 
 const kindTypes: Record<TimelineKindFilter, TimelineEventType[] | null> = {

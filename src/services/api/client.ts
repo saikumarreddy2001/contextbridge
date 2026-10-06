@@ -6,12 +6,28 @@ export function apiUrl(path: string): string {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  let response: Response
+  return readJson<T>(await request(path))
+}
+
+export async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  return readJson<T>(
+    await request(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  )
+}
+
+async function request(path: string, init?: RequestInit): Promise<Response> {
   try {
-    response = await fetch(apiUrl(path))
+    return await fetch(apiUrl(path), init)
   } catch {
     throw new Error("The reconstruction service could not be reached.")
   }
+}
+
+async function readJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`The reconstruction service returned ${response.status}.`)
   }

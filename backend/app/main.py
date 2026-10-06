@@ -9,7 +9,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:43123", "http://localhost:43123"],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 app.include_router(projects_router, prefix="/api")

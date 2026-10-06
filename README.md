@@ -6,6 +6,8 @@ Alex Morgan, Senior Product Engineer, was away for 8 working days. Overview show
 
 Catch-up, the context graph, the timeline, and search read a deterministic FastAPI reconstruction of raw Atlas events. If that service is down, each of those screens explains the failure and can switch to the saved demo data.
 
+Ask Context, change explanations, hybrid search, and inferred graph edges are an optional AI layer on that reconstruction. The default is `AI_PROVIDER=none`, which leaves Phase 5 behavior in place. The demo uses `AI_PROVIDER=mock` (no API key and no network). See `.env.example`. Keys stay on the server.
+
 ## Run locally
 
 Frontend:
@@ -50,5 +52,6 @@ CORS allows `http://127.0.0.1:43123` and `http://localhost:43123`. Override the 
 | `/decisions` | Decisions preview |
 | `/sources` | Sources preview |
 | `/search` | Project search |
+| `/ask` | Ask Context |
 | `/settings` | Settings, including theme |
 | `/help` | Help |

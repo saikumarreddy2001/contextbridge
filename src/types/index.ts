@@ -200,6 +200,8 @@ export interface CatchUpItem {
   evidence: Evidence[]
   /** When set, catch-up offers a link to this context-graph node. */
   contextFocusId?: string
+  /** Present only when the AI layer produced a grounded summary. */
+  aiSummary?: string
 }
 
 export type ContextNodeType =
@@ -258,6 +260,9 @@ export interface ContextEdge {
   relationshipType: RelationshipType
   label: string
   description: string
+  confidenceSource?: "deterministic" | "ai_inferred"
+  reason?: string
+  evidence?: { id: string; title: string }[]
 }
 
 export interface GraphFilters {
@@ -322,4 +327,5 @@ export interface SearchFilters {
   status: string
   from: string
   to: string
+  mode: "keyword" | "hybrid"
 }

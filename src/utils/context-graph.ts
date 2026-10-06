@@ -182,6 +182,7 @@ export function toFlowEdges(
         style: {
           strokeWidth: emphasis === "active" ? 2 : 1,
           opacity: emphasis === "dimmed" ? 0.2 : 1,
+          strokeDasharray: edge.confidenceSource === "ai_inferred" ? "6 4" : undefined,
         },
       }
     })

@@ -26,6 +26,18 @@ export function EdgeDetailPanel({
         {edge.label}
       </h2>
       <p className="mt-3 text-sm leading-relaxed">{edge.description}</p>
+      {edge.confidenceSource === "ai_inferred" ? (
+        <div className="mt-3">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Evidence</p>
+          <ul className="mt-2 space-y-1">
+            {(edge.evidence ?? []).map((item) => (
+              <li key={item.id} className="text-sm">
+                {item.title}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <div className="mt-4 space-y-2">
         {source ? (
           <button
