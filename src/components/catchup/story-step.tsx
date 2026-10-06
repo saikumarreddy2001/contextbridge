@@ -11,7 +11,7 @@ export function StoryStep({
   isLast: boolean
 }) {
   return (
-    <li className="relative flex gap-3 pb-6 lg:flex-1 lg:flex-col lg:items-start lg:pb-0 lg:pr-3">
+    <li className="relative flex min-w-0 gap-3 pb-6 lg:flex-1 lg:flex-col lg:items-start lg:pb-0 lg:pr-4">
       <span className="relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border bg-background text-[10px] font-medium tabular-nums">
         {index + 1}
       </span>
@@ -33,7 +33,7 @@ export function StoryStep({
       )}
       <div className="min-w-0 pt-0.5 lg:pt-3">
         <p className="text-xs font-medium text-muted-foreground">{step.dateLabel}</p>
-        <p className="mt-0.5 text-sm font-medium leading-snug">{step.title}</p>
+        <p className="mt-0.5 text-sm font-medium leading-snug wrap-break-word">{step.title}</p>
       </div>
     </li>
   )

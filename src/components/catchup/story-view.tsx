@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { ChangeComparison } from "@/components/catchup/change-comparison"
 import { StoryHeader } from "@/components/catchup/story-header"
 import { StorySequence } from "@/components/catchup/story-sequence"
@@ -15,6 +16,7 @@ export function StoryView({
   onPrevious,
   onNext,
   onBackToAll,
+  evidence,
 }: {
   story: CatchUpStory
   whyOpen: boolean
@@ -25,35 +27,42 @@ export function StoryView({
   onPrevious: () => void
   onNext: () => void
   onBackToAll: () => void
+  evidence?: ReactNode
 }) {
   const evidenceLabel = story.type === "blocker" ? "View related work" : "View Evidence"
+  const split = evidence != null
 
   return (
-    <article>
-      <StoryHeader story={story} />
-      <StorySequence steps={story.steps} />
-      <StoryBody story={story} whyOpen={whyOpen} onToggleWhy={onToggleWhy} />
-      <div className="mt-6">
-        <Button type="button" id="view-evidence" variant="outline" onClick={onOpenEvidence}>
-          {evidenceLabel}
-        </Button>
+    <article className={split ? "lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-x-6" : undefined}>
+      <div className={split ? "lg:col-span-2" : undefined}>
+        <StoryHeader story={story} />
+        <StorySequence steps={story.steps} />
       </div>
-      {showGuidedNav ? (
-        <div className="mt-8 flex items-center justify-between gap-3 border-t pt-4">
-          <Button type="button" variant="outline" onClick={onPrevious} disabled={!canGoPrevious}>
-            Previous
-          </Button>
-          <Button type="button" onClick={onNext}>
-            Next
+      <div>
+        <StoryBody story={story} whyOpen={whyOpen} onToggleWhy={onToggleWhy} />
+        <div className="mt-6">
+          <Button type="button" id="view-evidence" variant="outline" onClick={onOpenEvidence}>
+            {evidenceLabel}
           </Button>
         </div>
-      ) : (
-        <div className="mt-8 border-t pt-4">
-          <Button type="button" variant="outline" onClick={onBackToAll}>
-            All changes
-          </Button>
-        </div>
-      )}
+        {showGuidedNav ? (
+          <div className="mt-8 flex items-center justify-between gap-3 border-t pt-4">
+            <Button type="button" variant="outline" onClick={onPrevious} disabled={!canGoPrevious}>
+              Previous
+            </Button>
+            <Button type="button" onClick={onNext}>
+              Next
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-8 border-t pt-4">
+            <Button type="button" variant="outline" onClick={onBackToAll}>
+              All changes
+            </Button>
+          </div>
+        )}
+      </div>
+      {evidence}
     </article>
   )
 }

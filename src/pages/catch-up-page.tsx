@@ -88,27 +88,39 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
               {catchUpWindow.projectName} · {catchUpWindow.startLabel} – {catchUpWindow.endLabel} · related change
             </p>
           )}
-          <div className={desktop && catchUp.evidencePanelOpen ? "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" : ""}>
-            <StoryView
-              story={catchUp.activeStory}
-              whyOpen={catchUp.whyOpen}
-              onToggleWhy={() => catchUp.setWhyOpen(!catchUp.whyOpen)}
-              onOpenEvidence={() => catchUp.openEvidence()}
-              showGuidedNav={catchUp.mode === "guided"}
-              canGoPrevious={catchUp.guidedIndex > 0}
-              onPrevious={catchUp.goPrevious}
-              onNext={catchUp.goNext}
-              onBackToAll={catchUp.openAll}
-            />
+          <StoryView
+            story={catchUp.activeStory}
+            whyOpen={catchUp.whyOpen}
+            onToggleWhy={() => catchUp.setWhyOpen(!catchUp.whyOpen)}
+            onOpenEvidence={() => catchUp.openEvidence()}
+            showGuidedNav={catchUp.mode === "guided"}
+            canGoPrevious={catchUp.guidedIndex > 0}
+            onPrevious={catchUp.goPrevious}
+            onNext={catchUp.goNext}
+            onBackToAll={catchUp.openAll}
+            evidence={
+              desktop && catchUp.evidencePanelOpen ? (
+                <EvidencePanel
+                  open
+                  evidence={catchUp.activeStory.evidence}
+                  selectedId={catchUp.selectedEvidenceId}
+                  onSelect={catchUp.setSelectedEvidenceId}
+                  onClose={closeEvidence}
+                  inline
+                />
+              ) : null
+            }
+          />
+          {desktop ? null : (
             <EvidencePanel
               open={catchUp.evidencePanelOpen}
               evidence={catchUp.activeStory.evidence}
               selectedId={catchUp.selectedEvidenceId}
               onSelect={catchUp.setSelectedEvidenceId}
               onClose={closeEvidence}
-              inline={desktop}
+              inline={false}
             />
-          </div>
+          )}
         </div>
       ) : null}
     </div>
