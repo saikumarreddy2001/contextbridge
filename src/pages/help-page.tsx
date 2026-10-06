@@ -2,7 +2,7 @@ import { PlaceholderPage } from "@/components/common/placeholder-page"
 
 const topics = [
   ["Overview", "What changed on the active project while you were away."],
-  ["What I Missed", "The same catch-up counts and important changes, without the rest of the dashboard."],
+  ["What I Missed", "A guided walk through the five stories from your time away."],
   ["Timeline", "How the project evolved, once that view is drawn."],
   ["Context Graph", "How a requirement connects to the decision that replaced it."],
   ["Decisions", "What was chosen, why, and when it changed."],

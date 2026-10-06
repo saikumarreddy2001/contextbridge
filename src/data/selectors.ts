@@ -116,7 +116,11 @@ export function getImportantChanges(projectId: string): ImportantChangeView[] {
 }
 
 export function getRecentActivity(projectId: string): Activity[] {
-  return activities.filter((item) => item.projectId === projectId)
+  return activities.filter((item) => item.projectId === projectId && !item.background)
+}
+
+export function countProjectActivities(projectId: string): number {
+  return activities.filter((item) => item.projectId === projectId).length
 }
 
 export function getAttentionTasks(projectId: string): Task[] {
@@ -134,4 +138,12 @@ export function getSources(projectId: string): Source[] {
 
 export function getDecisionCount(projectId: string): number {
   return decisions.filter((item) => item.projectId === projectId).length
+}
+
+export function getRequirementCount(projectId: string): number {
+  return requirementChanges.filter((item) => item.projectId === projectId).length
+}
+
+export function getBlockerCount(projectId: string): number {
+  return blockers.filter((item) => item.projectId === projectId).length
 }

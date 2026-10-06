@@ -1,6 +1,6 @@
 # ContextBridge
 
-ContextBridge reconstructs scattered workplace context for Northstar Technologies. Phase 1 is the application shell, the Overview dashboard for Project Atlas, and preview pages for the rest of the product.
+ContextBridge reconstructs scattered workplace context for Northstar Technologies. The shell and Overview are in place. `/catch-up` walks the September 16–23 Atlas story.
 
 Alex Morgan, Senior Product Engineer, was away for 8 working days. Overview shows what changed on Project Atlas: the Auth0 decision, the September 22 revision, and the payment sandbox blocker. There is no backend.
 
@@ -22,7 +22,7 @@ npm run build
 | Path | Page |
 | --- | --- |
 | `/overview` | Overview dashboard |
-| `/catch-up` | What You Missed preview |
+| `/catch-up` | What you missed |
 | `/timeline` | Timeline preview |
 | `/graph` | Context Graph preview |
 | `/decisions` | Decisions preview |
