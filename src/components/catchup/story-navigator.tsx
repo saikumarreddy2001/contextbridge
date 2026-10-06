@@ -1,5 +1,5 @@
 import { catchUpWindow } from "@/data/catch-up-stories"
-import type { CatchUpStory } from "@/types"
+import type { CatchUpItem } from "@/types"
 import { cn } from "@/utils/cn"
 
 export function StoryNavigator({
@@ -9,7 +9,7 @@ export function StoryNavigator({
   onSelect,
   onViewAll,
 }: {
-  stories: CatchUpStory[]
+  stories: CatchUpItem[]
   activeId: string
   viewedIds: string[]
   onSelect: (slug: string) => void
@@ -42,7 +42,7 @@ export function StoryNavigator({
                   onClick={() => onSelect(story.slug)}
                   aria-current={current ? "step" : undefined}
                   className={cn(
-                    "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors motion-reduce:transition-none outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+                    "flex min-h-11 items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
                     current && "border-foreground/30 bg-accent text-foreground",
                   )}
                 >

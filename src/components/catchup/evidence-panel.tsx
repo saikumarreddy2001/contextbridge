@@ -77,7 +77,10 @@ export function EvidencePanel({
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto p-0 sm:max-w-md">
+      <SheetContent
+        side="bottom"
+        className="inset-0 h-auto max-h-none w-full gap-0 overflow-y-auto rounded-none p-0 data-[side=bottom]:inset-0 data-[side=bottom]:h-auto data-[side=bottom]:max-h-none"
+      >
         <SheetHeader className="sr-only">
           <SheetTitle>Evidence</SheetTitle>
           <SheetDescription>Sources connected to this change</SheetDescription>

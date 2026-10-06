@@ -13,6 +13,16 @@ export function SourceDetail({ evidence }: { evidence: Evidence }) {
         {evidence.author}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">{evidence.projectName}</p>
+      {evidence.meta.length > 0 ? (
+        <dl className="mt-3 space-y-1">
+          {evidence.meta.map((field) => (
+            <div key={field.label} className="text-xs">
+              <dt className="inline font-medium">{field.label}: </dt>
+              <dd className="inline text-muted-foreground">{field.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
       <blockquote className="mt-3 border-l-2 pl-3 text-sm leading-relaxed">
         {evidence.excerpt}
       </blockquote>

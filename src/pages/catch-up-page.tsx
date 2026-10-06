@@ -7,13 +7,8 @@ import { StoryNavigator } from "@/components/catchup/story-navigator"
 import { StoryView } from "@/components/catchup/story-view"
 import { EmptyWorkspace } from "@/components/common/empty-workspace"
 import { PageContainer } from "@/components/common/page-container"
-import { catchUpWindow } from "@/data/catch-up-stories"
-import {
-  countProjectActivities,
-  getBlockerCount,
-  getDecisionCount,
-  getRequirementCount,
-} from "@/data/selectors"
+import { catchUpWindow, completionSummary } from "@/data/catch-up-stories"
+import { countProjectActivities } from "@/data/selectors"
 import { useCatchUp } from "@/hooks/use-catch-up"
 import { useMinWidth } from "@/hooks/use-media"
 import { useProject, useWorkspace } from "@/hooks/use-selection"
@@ -32,6 +27,7 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
   const catchUp = useCatchUp(projectId)
   const desktop = useMinWidth(1024)
   const activityCount = countProjectActivities(projectId)
+  const item = catchUp.selectedCatchUpItem
 
   function closeEvidence() {
     catchUp.closeEvidence()
@@ -43,7 +39,7 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
       {catchUp.mode === "intro" ? (
         <CatchUpIntro
           activityCount={activityCount}
-          changeCount={catchUp.stories.length}
+          changeCount={catchUp.items.length}
           onStart={catchUp.start}
           onViewAll={catchUp.openAll}
         />
@@ -51,35 +47,35 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
 
       {catchUp.mode === "all" ? (
         <AllChanges
-          stories={catchUp.stories}
+          stories={catchUp.items}
           filter={catchUp.selectedFilter}
-          viewedIds={catchUp.viewedStoryIds}
+          viewedIds={catchUp.viewedIds}
           onFilter={catchUp.setSelectedFilter}
-          onOpen={catchUp.openStory}
+          onOpen={catchUp.openItem}
         />
       ) : null}
 
       {catchUp.mode === "complete" ? (
         <CatchUpComplete
-          storyCount={catchUp.guidedStories.length}
-          decisionCount={getDecisionCount(projectId)}
-          requirementCount={getRequirementCount(projectId)}
-          blockerCount={getBlockerCount(projectId)}
-          onReviewAll={catchUp.openAll}
-          onOpenStory={catchUp.openStory}
+          reviewedCount={catchUp.guidedItems.length}
+          summary={completionSummary(catchUp.items)}
         />
       ) : null}
 
-      {catchUp.activeStory && (catchUp.mode === "guided" || catchUp.mode === "story") ? (
-        <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+      {item && (catchUp.mode === "guided" || catchUp.mode === "story") ? (
+        <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
           {catchUp.mode === "guided" ? (
             <div className="mb-6 space-y-4">
-              <CatchUpProgress index={catchUp.guidedIndex} total={catchUp.guidedStories.length} />
+              <CatchUpProgress
+                items={catchUp.guidedItems}
+                activeId={item.id}
+                onSelect={catchUp.openItem}
+              />
               <StoryNavigator
-                stories={catchUp.guidedStories}
-                activeId={catchUp.activeStory.id}
-                viewedIds={catchUp.viewedStoryIds}
-                onSelect={catchUp.openStory}
+                stories={catchUp.guidedItems}
+                activeId={item.id}
+                viewedIds={catchUp.viewedIds}
+                onSelect={catchUp.openItem}
                 onViewAll={catchUp.openAll}
               />
             </div>
@@ -89,9 +85,9 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
             </p>
           )}
           <StoryView
-            story={catchUp.activeStory}
-            whyOpen={catchUp.whyOpen}
-            onToggleWhy={() => catchUp.setWhyOpen(!catchUp.whyOpen)}
+            item={item}
+            expandedReason={catchUp.expandedReason}
+            onToggleReason={() => catchUp.setExpandedReason(!catchUp.expandedReason)}
             onOpenEvidence={() => catchUp.openEvidence()}
             showGuidedNav={catchUp.mode === "guided"}
             canGoPrevious={catchUp.guidedIndex > 0}
@@ -102,9 +98,9 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
               desktop && catchUp.evidencePanelOpen ? (
                 <EvidencePanel
                   open
-                  evidence={catchUp.activeStory.evidence}
-                  selectedId={catchUp.selectedEvidenceId}
-                  onSelect={catchUp.setSelectedEvidenceId}
+                  evidence={item.evidence}
+                  selectedId={catchUp.selectedEvidence?.id ?? null}
+                  onSelect={catchUp.selectEvidence}
                   onClose={closeEvidence}
                   inline
                 />
@@ -114,9 +110,9 @@ function AtlasCatchUp({ projectId }: { projectId: string }) {
           {desktop ? null : (
             <EvidencePanel
               open={catchUp.evidencePanelOpen}
-              evidence={catchUp.activeStory.evidence}
-              selectedId={catchUp.selectedEvidenceId}
-              onSelect={catchUp.setSelectedEvidenceId}
+              evidence={item.evidence}
+              selectedId={catchUp.selectedEvidence?.id ?? null}
+              onSelect={catchUp.selectEvidence}
               onClose={closeEvidence}
               inline={false}
             />

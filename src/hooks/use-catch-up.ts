@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
-import {
-  guidedStoriesForProject,
-  storyBySlug,
-  storiesForProject,
-} from "@/data/catch-up-stories"
-import type { CatchUpFilter, CatchUpStory, Evidence } from "@/types"
+import { guidedItemsForProject, itemBySlug, itemsForProject } from "@/data/catch-up-stories"
+import type { CatchUpFilter, CatchUpItem, Evidence } from "@/types"
 
 export type CatchUpMode = "intro" | "guided" | "story" | "all" | "complete"
 
@@ -17,34 +13,39 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 export function useCatchUp(projectId: string) {
   const [params, setParams] = useSearchParams()
-  const [viewedStoryIds, setViewedStoryIds] = useState<string[]>([])
+  const [viewedIds, setViewedIds] = useState<string[]>([])
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(null)
   const [evidencePanelOpen, setEvidencePanelOpen] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<CatchUpFilter>("all")
-  const [whyOpen, setWhyOpen] = useState(false)
+  const [expandedReason, setExpandedReason] = useState(false)
 
   const view = params.get("view")
   const slug = params.get("story")
-  const stories = storiesForProject(projectId)
-  const guidedStories = guidedStoriesForProject(projectId)
-  const activeStory = slug ? storyBySlug(projectId, slug) : undefined
-  const guidedIndex = activeStory ? guidedStories.findIndex((story) => story.id === activeStory.id) : -1
+  const items = itemsForProject(projectId)
+  const guidedItems = guidedItemsForProject(projectId)
+  const selectedCatchUpItem = slug ? itemBySlug(projectId, slug) : undefined
+  const guidedIndex = selectedCatchUpItem
+    ? guidedItems.findIndex((item) => item.id === selectedCatchUpItem.id)
+    : -1
 
   let mode: CatchUpMode = "intro"
   if (view === "all") mode = "all"
   else if (view === "complete") mode = "complete"
-  else if (activeStory && guidedIndex >= 0) mode = "guided"
-  else if (activeStory) mode = "story"
+  else if (selectedCatchUpItem && guidedIndex >= 0) mode = "guided"
+  else if (selectedCatchUpItem) mode = "story"
   else if (slug) mode = "intro"
 
-  if (activeStory && !viewedStoryIds.includes(activeStory.id)) {
-    setViewedStoryIds([...viewedStoryIds, activeStory.id])
+  if (selectedCatchUpItem && !viewedIds.includes(selectedCatchUpItem.id)) {
+    setViewedIds([...viewedIds, selectedCatchUpItem.id])
   }
 
+  const selectedEvidence: Evidence | null =
+    selectedCatchUpItem?.evidence.find((item) => item.id === selectedEvidenceId) ?? null
+
   useEffect(() => {
-    if (mode !== "guided" || !activeStory) return
-    const story = activeStory
-    const sequence = guidedStoriesForProject(projectId)
+    if (mode !== "guided" || !selectedCatchUpItem) return
+    const current = selectedCatchUpItem
+    const sequence = guidedItemsForProject(projectId)
 
     function onKeyDown(event: KeyboardEvent) {
       if (isEditableTarget(event.target)) return
@@ -57,7 +58,7 @@ export function useCatchUp(projectId: string) {
       }
       if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return
       event.preventDefault()
-      const index = sequence.findIndex((item) => item.id === story.id)
+      const index = sequence.findIndex((item) => item.id === current.id)
       if (index < 0) return
       const delta = event.key === "ArrowRight" ? 1 : -1
       const nextIndex = index + delta
@@ -65,7 +66,7 @@ export function useCatchUp(projectId: string) {
       const next = sequence[nextIndex]
       setEvidencePanelOpen(false)
       setSelectedEvidenceId(null)
-      setWhyOpen(false)
+      setExpandedReason(false)
       if (!next) {
         setParams({ view: "complete" })
         return
@@ -75,12 +76,12 @@ export function useCatchUp(projectId: string) {
 
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [mode, activeStory, evidencePanelOpen, projectId, setParams])
+  }, [mode, selectedCatchUpItem, evidencePanelOpen, projectId, setParams])
 
-  function openStory(nextSlug: string) {
+  function openItem(nextSlug: string) {
     setEvidencePanelOpen(false)
     setSelectedEvidenceId(null)
-    setWhyOpen(false)
+    setExpandedReason(false)
     setParams({ story: nextSlug })
   }
 
@@ -90,45 +91,39 @@ export function useCatchUp(projectId: string) {
     setParams({ view: "all" })
   }
 
-  function openIntro() {
-    setEvidencePanelOpen(false)
-    setSelectedEvidenceId(null)
-    setParams({})
-  }
-
   function openComplete() {
     setEvidencePanelOpen(false)
     setSelectedEvidenceId(null)
-    setWhyOpen(false)
+    setExpandedReason(false)
     setParams({ view: "complete" })
   }
 
   function start() {
-    const first = guidedStories[0]
+    const first = guidedItems[0]
     if (!first) return
-    openStory(first.slug)
+    openItem(first.slug)
   }
 
   function goNext() {
-    if (!activeStory || guidedIndex < 0) return
-    const next = guidedStories[guidedIndex + 1]
+    if (!selectedCatchUpItem || guidedIndex < 0) return
+    const next = guidedItems[guidedIndex + 1]
     if (!next) {
       openComplete()
       return
     }
-    openStory(next.slug)
+    openItem(next.slug)
   }
 
   function goPrevious() {
     if (guidedIndex <= 0) return
-    const previous = guidedStories[guidedIndex - 1]
+    const previous = guidedItems[guidedIndex - 1]
     if (!previous) return
-    openStory(previous.slug)
+    openItem(previous.slug)
   }
 
   function openEvidence(evidenceId?: string) {
-    const first = activeStory?.evidence[0]
-    setSelectedEvidenceId(evidenceId ?? first?.id ?? null)
+    const first = selectedCatchUpItem?.evidence[0]
+    setSelectedEvidenceId(evidenceId ?? selectedEvidenceId ?? first?.id ?? null)
     setEvidencePanelOpen(true)
   }
 
@@ -136,29 +131,28 @@ export function useCatchUp(projectId: string) {
     setEvidencePanelOpen(false)
   }
 
-  const selectedEvidence: Evidence | undefined = activeStory?.evidence.find(
-    (item) => item.id === selectedEvidenceId,
-  )
+  function selectEvidence(evidenceId: string) {
+    setSelectedEvidenceId(evidenceId)
+    setEvidencePanelOpen(true)
+  }
 
   return {
     mode,
-    stories,
-    guidedStories,
-    activeStory,
+    items,
+    guidedItems,
     guidedIndex,
-    viewedStoryIds,
-    selectedEvidenceId,
+    viewedIds,
+    selectedCatchUpItem,
     selectedEvidence,
+    expandedReason,
     evidencePanelOpen,
     selectedFilter,
-    whyOpen,
     setSelectedFilter,
-    setWhyOpen,
-    setSelectedEvidenceId,
+    setExpandedReason,
+    selectEvidence,
     start,
-    openStory,
+    openItem,
     openAll,
-    openIntro,
     openComplete,
     goNext,
     goPrevious,
@@ -167,6 +161,6 @@ export function useCatchUp(projectId: string) {
   }
 }
 
-export function isViewed(ids: string[], story: CatchUpStory): boolean {
-  return ids.includes(story.id)
+export function isViewed(ids: string[], item: CatchUpItem): boolean {
+  return ids.includes(item.id)
 }

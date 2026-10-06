@@ -1,6 +1,6 @@
-import { catchUpWindow, storyMatchesFilter } from "@/data/catch-up-stories"
+import { catchUpWindow, itemMatchesFilter } from "@/data/catch-up-stories"
 import { Button } from "@/components/ui/button"
-import type { CatchUpFilter, CatchUpStory } from "@/types"
+import type { CatchUpFilter, CatchUpItem, CatchUpKind } from "@/types"
 import { cn } from "@/utils/cn"
 
 const filters: { id: CatchUpFilter; label: string }[] = [
@@ -8,14 +8,16 @@ const filters: { id: CatchUpFilter; label: string }[] = [
   { id: "decision", label: "Decision" },
   { id: "requirement", label: "Requirement" },
   { id: "blocker", label: "Blocker" },
+  { id: "action", label: "Action" },
   { id: "discussion", label: "Discussion" },
   { id: "task", label: "Task" },
 ]
 
-const typeLabels: Record<CatchUpStory["type"], string> = {
+const typeLabels: Record<CatchUpKind, string> = {
   decision: "Decision",
   requirement: "Requirement",
   blocker: "Blocker",
+  action: "Action",
   discussion: "Discussion",
   task: "Task",
 }
@@ -27,13 +29,13 @@ export function AllChanges({
   onFilter,
   onOpen,
 }: {
-  stories: CatchUpStory[]
+  stories: CatchUpItem[]
   filter: CatchUpFilter
   viewedIds: string[]
   onFilter: (filter: CatchUpFilter) => void
   onOpen: (slug: string) => void
 }) {
-  const visible = stories.filter((story) => storyMatchesFilter(story, filter))
+  const visible = stories.filter((story) => itemMatchesFilter(story, filter))
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
@@ -76,7 +78,7 @@ export function AllChanges({
               >
                 <span className="min-w-0">
                   <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    {typeLabels[story.type]}
+                    {typeLabels[story.kind]}
                     <span aria-hidden="true"> · </span>
                     {story.dateLabel}
                     {story.guided ? null : (

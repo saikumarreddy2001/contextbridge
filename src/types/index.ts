@@ -120,11 +120,9 @@ export interface AuthStoryStep {
   source: SourceKind
 }
 
-export type StoryType = "decision" | "requirement" | "blocker" | "discussion" | "task"
+export type CatchUpKind = "decision" | "requirement" | "blocker" | "action" | "discussion" | "task"
 
-export type EvidenceKind = SourceKind | "decision"
-
-export type CatchUpFilter = "all" | StoryType
+export type CatchUpFilter = "all" | CatchUpKind
 
 export interface StoryStep {
   id: string
@@ -132,9 +130,14 @@ export interface StoryStep {
   title: string
 }
 
+export interface EvidenceMeta {
+  label: string
+  value: string
+}
+
 export interface Evidence {
   id: string
-  kind: EvidenceKind
+  kind: SourceKind
   kindLabel: string
   dateLabel: string
   title: string
@@ -142,87 +145,57 @@ export interface Evidence {
   projectName: string
   excerpt: string
   relationship: string
+  meta: EvidenceMeta[]
 }
 
-export interface ChangeComparison {
+export interface CatchUpChange {
   beforeLabel: string
   beforeValue: string
   afterLabel: string
   afterValue: string
-  reason: string
 }
 
-export interface WhyChangedPoint {
+export interface CatchUpDetail {
+  id: string
+  label: string
+  value: string
+}
+
+export interface CatchUpReasonPoint {
   id: string
   label: string
   detail: string
 }
 
-export interface TaskChange {
-  id: string
-  key: string
-  title: string
-  outcome: string
+export interface CatchUpReason {
+  prompt: string
+  summary: string
+  points: CatchUpReasonPoint[]
 }
 
-interface StoryBase {
-  id: string
-  slug: string
-  priority: Priority
-  title: string
-  summary: string
-  dateLabel: string
-  projectId: string
-  kicker: string
-  navigatorLabel: string
-  guided: boolean
-  steps: StoryStep[]
-  evidence: Evidence[]
-  whyItMatters: string
+export interface CatchUpAction {
+  ask: string
+  dueLabel: string
   statusLabel: string
 }
 
-export interface RevisedDecisionStory extends StoryBase {
-  type: "decision"
-  variant: "revised"
-  comparison: ChangeComparison
-  whyChanged: WhyChangedPoint[]
+export interface CatchUpItem {
+  id: string
+  slug: string
+  projectId: string
+  kind: CatchUpKind
+  kindLabel: string
+  completionLabel: string
+  title: string
+  summary: string
+  navigatorLabel: string
+  guided: boolean
+  priority: Priority
+  dateLabel: string
+  steps: StoryStep[]
+  change: CatchUpChange | null
+  details: CatchUpDetail[]
+  reason: CatchUpReason | null
+  action: CatchUpAction | null
+  evidence: Evidence[]
 }
-
-export interface StandingDecisionStory extends StoryBase {
-  type: "decision"
-  variant: "standing"
-  comparison: ChangeComparison
-}
-
-export interface RequirementStory extends StoryBase {
-  type: "requirement"
-  comparison: ChangeComparison
-}
-
-export interface BlockerStory extends StoryBase {
-  type: "blocker"
-  blockedWork: string
-  blockedBy: string
-  owner: string
-}
-
-export interface DiscussionStory extends StoryBase {
-  type: "discussion"
-  openQuestion: string
-  participants: string[]
-  whyAlexShouldCare: string
-}
-
-export interface TaskImpactStory extends StoryBase {
-  type: "task"
-  taskChanges: TaskChange[]
-}
-
-export type CatchUpStory =
-  | RevisedDecisionStory
-  | StandingDecisionStory
-  | RequirementStory
-  | BlockerStory
-  | DiscussionStory
-  | TaskImpactStory
