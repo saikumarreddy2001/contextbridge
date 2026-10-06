@@ -28,6 +28,7 @@ export const catchUpItems: CatchUpItem[] = [
     kindLabel: "Decision changed",
     completionLabel: "Decision Changed",
     title: "Authentication architecture changed",
+    contextFocusId: "authentication-decision-revised",
     summary:
       "The team originally selected Auth0 but revised the approach after token-refresh limitations were discovered during implementation.",
     navigatorLabel: "Authentication architecture",

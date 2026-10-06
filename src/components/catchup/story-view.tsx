@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { Link } from "react-router-dom"
 import { ChangeComparison } from "@/components/catchup/change-comparison"
 import { StoryHeader } from "@/components/catchup/story-header"
 import { StorySequence } from "@/components/catchup/story-sequence"
@@ -45,10 +46,15 @@ export function StoryView({
       </div>
       <div className="min-w-0">
         <ItemBody item={item} expandedReason={expandedReason} onToggleReason={onToggleReason} />
-        <div className="mt-6">
+        <div className="mt-6 flex flex-wrap gap-2">
           <Button type="button" id="view-evidence" variant="outline" className="min-h-11" onClick={onOpenEvidence}>
             View Evidence
           </Button>
+          {item.contextFocusId ? (
+            <Button asChild variant="outline" className="min-h-11">
+              <Link to={`/graph?focus=${item.contextFocusId}`}>Explore Context</Link>
+            </Button>
+          ) : null}
         </div>
         {showGuidedNav ? (
           <div className="mt-8 flex items-center justify-between gap-3 border-t pt-4">

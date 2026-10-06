@@ -198,4 +198,71 @@ export interface CatchUpItem {
   reason: CatchUpReason | null
   action: CatchUpAction | null
   evidence: Evidence[]
+  /** When set, catch-up offers a link to this context-graph node. */
+  contextFocusId?: string
+}
+
+export type ContextNodeType =
+  | "requirement"
+  | "decision"
+  | "discussion"
+  | "meeting"
+  | "jira"
+  | "github"
+  | "problem"
+  | "blocker"
+  | "document"
+  | "person"
+
+export type RelationshipType =
+  | "triggered"
+  | "resulted_in"
+  | "implemented_by"
+  | "discussed_in"
+  | "blocked_by"
+  | "superseded_by"
+  | "evidence_for"
+  | "assigned_to"
+
+export type GraphKindFilter =
+  | "all"
+  | "decisions"
+  | "requirements"
+  | "code"
+  | "tasks"
+  | "meetings"
+  | "problems"
+  | "blockers"
+
+export interface ContextSourceRef {
+  id: string
+  label: string
+}
+
+export interface ContextNode {
+  id: string
+  type: ContextNodeType
+  title: string
+  date: string
+  status: string
+  description: string
+  projectId: string
+  people: string[]
+  sourceRefs: ContextSourceRef[]
+}
+
+export interface ContextEdge {
+  id: string
+  source: string
+  target: string
+  relationshipType: RelationshipType
+  label: string
+  description: string
+}
+
+export interface GraphFilters {
+  kind: GraphKindFilter
+  projectId: string
+  from: string
+  to: string
 }

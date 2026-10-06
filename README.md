@@ -24,7 +24,7 @@ npm run build
 | `/overview` | Overview dashboard |
 | `/catch-up` | What you missed |
 | `/timeline` | Timeline preview |
-| `/graph` | Context Graph preview |
+| `/graph` | Context Graph |
 | `/decisions` | Decisions preview |
 | `/sources` | Sources preview |
 | `/search` | Search preview |
