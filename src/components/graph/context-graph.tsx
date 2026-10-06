@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Background, Controls, MiniMap, ReactFlow, useReactFlow } from "@xyflow/react"
+import { Background, Controls, MiniMap, ReactFlow, getViewportForBounds, useReactFlow } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { contextNodeTypes } from "@/components/graph/context-node"
 import { GraphLegend } from "@/components/graph/graph-legend"
@@ -10,29 +10,46 @@ import { useMinWidth } from "@/hooks/use-media"
 type GraphState = ReturnType<typeof useContextGraph>
 
 export function ContextGraph({ graph }: { graph: GraphState }) {
-  const { fitView } = useReactFlow()
+  const { fitView, getNodesBounds, setViewport } = useReactFlow()
   const { theme } = useTheme()
   const desktop = useMinWidth(1024)
 
   useEffect(() => {
-    if (!graph.fitNodeId) return
+    if (!graph.fitNodeId || graph.traceMode) return
     const frame = requestAnimationFrame(() => {
-      void fitView({ nodes: [{ id: graph.fitNodeId ?? "" }], padding: 0.5, duration: 180 })
+      void fitView({ nodes: [{ id: graph.fitNodeId ?? "" }], padding: 0.5, duration: 0 })
     })
     return () => cancelAnimationFrame(frame)
-  }, [graph.fitNodeId, fitView])
+  }, [graph.fitNodeId, graph.traceMode, fitView])
 
   useEffect(() => {
     if (!graph.traceMode || graph.tracePath.length < 2) return
-    const frame = requestAnimationFrame(() => {
-      void fitView({
-        nodes: graph.tracePath.map((id) => ({ id })),
-        padding: 0.2,
-        duration: 180,
+    let cancelled = false
+    let attempts = 0
+    const frame = requestAnimationFrame(function fitTrace() {
+      if (cancelled) return
+      const bounds = getNodesBounds(graph.tracePath)
+      if ((bounds.width < 10 || bounds.height < 10) && attempts < 10) {
+        attempts += 1
+        requestAnimationFrame(fitTrace)
+        return
+      }
+      const flow = document.querySelector<HTMLElement>(".react-flow")
+      if (!flow) return
+      const panel = window.matchMedia("(min-width: 1024px)").matches ? 352 : 0
+      const viewport = getViewportForBounds(bounds, flow.clientWidth, flow.clientHeight, 0.85, 1.2, {
+        top: "40px",
+        right: `${panel + 24}px`,
+        bottom: "64px",
+        left: "24px",
       })
+      void setViewport(viewport, { duration: 0 })
     })
-    return () => cancelAnimationFrame(frame)
-  }, [graph.traceMode, graph.tracePath, fitView])
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(frame)
+    }
+  }, [graph.traceMode, graph.tracePath, getNodesBounds, setViewport])
 
   return (
     <ReactFlow
@@ -40,7 +57,7 @@ export function ContextGraph({ graph }: { graph: GraphState }) {
       edges={graph.flowEdges}
       nodeTypes={contextNodeTypes}
       colorMode={theme}
-      fitView={!graph.fitNodeId}
+      fitView={!graph.fitNodeId && !graph.traceMode}
       fitViewOptions={{ padding: 0.12 }}
       minZoom={0.3}
       maxZoom={1.6}
@@ -55,7 +72,22 @@ export function ContextGraph({ graph }: { graph: GraphState }) {
     >
       <Background />
       <Controls showInteractive={false} />
-      {desktop ? <MiniMap pannable zoomable className="hidden md:block" /> : null}
+      {desktop ? (
+        <MiniMap
+          pannable
+          zoomable
+          bgColor="var(--background)"
+          maskColor="color-mix(in oklch, var(--foreground) 14%, transparent)"
+          maskStrokeColor="var(--foreground)"
+          maskStrokeWidth={2}
+          nodeColor="var(--foreground)"
+          nodeStrokeColor="var(--foreground)"
+          nodeStrokeWidth={8}
+          nodeBorderRadius={6}
+          ariaLabel="Graph overview"
+          style={{ width: 200, height: 140 }}
+        />
+      ) : null}
       {graph.traceMode ? (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded-md border bg-background px-2 py-1 shadow-sm">
           <span className="text-xs font-medium">

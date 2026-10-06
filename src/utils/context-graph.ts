@@ -156,6 +156,8 @@ export function toFlowNodes(
     type: "context",
     position: positions.get(domain.id) ?? { x: 0, y: 0 },
     data: { domain, emphasis: emphasisFor(domain.id) },
+    initialWidth: 220,
+    initialHeight: 96,
     draggable: false,
     selectable: true,
   }))
