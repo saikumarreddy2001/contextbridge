@@ -43,17 +43,20 @@ def test_authentication_chain():
     assert "token" in titles[5].lower()
     assert "revised" in titles[6].lower()
     linked = {(rel.source_event_id, rel.target_event_id) for rel in rec.relationships}
-    pairs = list(zip(rec.milestone_ids, rec.milestone_ids[1:], strict=False))
-    assert all(any(pair == edge or (pair[0], pair[1]) == edge for edge in linked) or True for pair in pairs)
-    required = [
-        ("raw-doc-launch", "raw-decision-auth0"),
-        ("raw-decision-auth0", "raw-jira-auth-142"),
-        ("raw-jira-auth-142", "raw-pr-184"),
-        ("raw-pr-184", "raw-problem-0921"),
-        ("raw-problem-0921", "raw-decision-revised"),
+    chain = [
+        "raw-meeting-0916",
+        "raw-doc-launch",
+        "raw-discussion-0917",
+        "raw-decision-auth0",
+        "raw-jira-auth-142",
+        "raw-pr-184",
+        "raw-problem-0921",
+        "raw-decision-revised",
+        "raw-decision-custom",
     ]
-    for pair in required:
-        assert pair in linked
+    assert set(chain) <= {event.id for event in rec.events}
+    for source_id, target_id in zip(chain, chain[1:], strict=False):
+        assert (source_id, target_id) in linked
 
 
 def test_decision_change_keeps_provenance():

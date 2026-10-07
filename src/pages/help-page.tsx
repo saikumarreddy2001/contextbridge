@@ -14,8 +14,8 @@ export function HelpPage() {
   return (
     <PlaceholderPage
       title="Help"
-      summary="How ContextBridge is organized, and where the Atlas story will live."
-      detail="Header search submits to Search. ⌘K or Ctrl K focuses that field. Profile menu items do not sign you out or change an account."
+      summary="How this demo is organized. Project Atlas is synthetic data, not a connected workspace."
+      detail="Header search submits to Search. ⌘K or Ctrl K focuses that field. Slack, Jira, and GitHub are not connected. The profile menu does not sign you in or out."
     >
       <ul className="divide-y rounded-lg border">
         {topics.map(([title, body]) => (

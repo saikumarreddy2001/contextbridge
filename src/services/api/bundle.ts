@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react"
 import type { CatchUpItem, ContextEdge, ContextNode, TimelineLane } from "@/types"
 import type { ResolvedTimelineEvent, SearchRecord } from "@/utils/history"
-import { apiGet, atlasApiProject } from "@/services/api/client"
+import { apiBaseConfigured, apiGet, atlasApiProject } from "@/services/api/client"
 
 export interface ProjectBundle {
   catchUpItems: CatchUpItem[]
@@ -16,10 +16,14 @@ type BundleState = {
   status: "loading" | "ready" | "error" | "demo"
   data: ProjectBundle | null
   message: string | null
+  demoReason: "unconfigured" | "unavailable" | "chosen" | null
+  connected: boolean
 }
 
 const listeners = new Set<() => void>()
-let state: BundleState = { mode: "api", status: "loading", data: null, message: null }
+let state: BundleState = apiBaseConfigured
+  ? { mode: "api", status: "loading", data: null, message: null, demoReason: null, connected: false }
+  : { mode: "demo", status: "demo", data: null, message: null, demoReason: "unconfigured", connected: false }
 let request: Promise<void> | null = null
 
 function emit(next: BundleState) {
@@ -38,7 +42,7 @@ function getSnapshot() {
 }
 
 function getServerSnapshot(): BundleState {
-  return { mode: "api", status: "loading", data: null, message: null }
+  return { mode: "api", status: "loading", data: null, message: null, demoReason: null, connected: false }
 }
 
 export function useProjectBundle() {
@@ -46,20 +50,24 @@ export function useProjectBundle() {
 }
 
 export function chooseDemoData() {
-  emit({ mode: "demo", status: "demo", data: null, message: null })
+  emit({ mode: "demo", status: "demo", data: null, message: null, demoReason: "chosen", connected: state.connected })
 }
 
 export function ensureBundle() {
-  if (state.mode === "demo" || state.status === "ready" || request) return
+  if (!apiBaseConfigured || state.mode === "demo" || state.status === "ready" || state.status === "error" || request) return
   request = loadBundle()
     .then((data) => {
       if (state.mode === "demo") return
-      emit({ mode: "api", status: "ready", data, message: null })
+      emit({ mode: "api", status: "ready", data, message: null, demoReason: null, connected: true })
     })
     .catch((error: unknown) => {
       if (state.mode === "demo") return
       const message = error instanceof Error ? error.message : "The reconstruction service could not be reached."
-      emit({ mode: "api", status: "error", data: null, message })
+      if (state.connected) {
+        emit({ mode: "api", status: "error", data: state.data, message, demoReason: null, connected: true })
+        return
+      }
+      emit({ mode: "demo", status: "demo", data: null, message: null, demoReason: "unavailable", connected: false })
     })
     .finally(() => {
       request = null

@@ -26,6 +26,9 @@ export function AppShell() {
         <Sidebar variant="dock" />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar onOpenNav={() => setMobileNavOpen(true)} />
+          <p className="border-b px-4 py-1.5 text-[11px] leading-snug text-muted-foreground md:hidden">
+            Demo workspace — synthetic Project Atlas data
+          </p>
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetContent
               side="left"

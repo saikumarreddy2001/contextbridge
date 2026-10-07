@@ -1,5 +1,8 @@
 const env = import.meta.env as ImportMetaEnv & { VITE_API_BASE_URL?: string }
-const configured = env.VITE_API_BASE_URL?.replace(/\/$/, "")
+const rawBase = env.VITE_API_BASE_URL
+const configured = rawBase?.trim().replace(/\/$/, "")
+/** False only when the build explicitly sets an empty API origin. Unset still uses the local default. */
+export const apiBaseConfigured = rawBase === undefined || (configured?.length ?? 0) > 0
 const API_ORIGIN = configured || "http://127.0.0.1:8077"
 
 export function apiUrl(path: string): string {

@@ -6,7 +6,7 @@ export function NotFoundPage() {
   return (
     <PageContainer>
       <div className="max-w-xl py-8">
-        <h1 className="text-2xl font-medium tracking-tight">This page is not in ContextBridge</h1>
+        <h1 className="text-2xl font-medium tracking-tight">Page not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           The address does not match a section of the product.
         </p>

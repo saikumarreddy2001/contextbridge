@@ -31,11 +31,7 @@ export function ProfileMenu() {
           <span className="block text-xs text-muted-foreground">{currentUser.title}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Preferences</DropdownMenuItem>
-        <DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>Sign out</DropdownMenuItem>
+        <DropdownMenuItem disabled>Demo profile. No account is connected.</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

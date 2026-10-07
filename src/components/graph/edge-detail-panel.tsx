@@ -27,6 +27,9 @@ export function EdgeDetailPanel({
       </h2>
       <p className="mt-3 text-sm leading-relaxed">{edge.description}</p>
       {edge.confidenceSource === "ai_inferred" ? (
+        <p className="mt-2 text-sm text-muted-foreground">AI inferred. The dashed line is not a deterministic relationship.</p>
+      ) : null}
+      {edge.confidenceSource === "ai_inferred" ? (
         <div className="mt-3">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Evidence</p>
           <ul className="mt-2 space-y-1">

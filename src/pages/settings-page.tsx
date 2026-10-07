@@ -10,7 +10,7 @@ export function SettingsPage() {
     <PlaceholderPage
       title="Settings"
       summary="Personal defaults for ContextBridge."
-      detail="Notification routing, connected sources, and account defaults will be managed here. Appearance is available now and is stored in this browser."
+      detail="No Slack, Jira, or GitHub account is connected. Appearance is stored in this browser."
     >
       <div>
         <h2 className="text-sm font-medium">Appearance</h2>

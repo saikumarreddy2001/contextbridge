@@ -1,4 +1,4 @@
-import { chooseDemoData } from "@/services/api/bundle"
+import { chooseDemoData, useProjectBundle } from "@/services/api/bundle"
 
 export function DataNotice({
   status,
@@ -7,6 +7,8 @@ export function DataNotice({
   status: "loading" | "error" | "demo"
   message?: string | null
 }) {
+  const bundle = useProjectBundle()
+  if (status === "demo" && bundle.demoReason === "unconfigured") return null
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-xl px-4 py-16 text-center">

@@ -99,12 +99,15 @@ export function Sidebar({
           </span>
           {isCollapsed ? (
             <span className="sr-only">
-              {currentUser.name}, {currentUser.title}
+              {currentUser.name}, {currentUser.title}. Demo workspace — synthetic Project Atlas data
             </span>
           ) : (
             <span className="min-w-0">
               <span className="block truncate text-sm font-medium">{currentUser.name}</span>
               <span className="block truncate text-xs text-muted-foreground">{currentUser.title}</span>
+              <span className="mt-1 block text-[11px] leading-snug text-muted-foreground">
+                Demo workspace — synthetic Project Atlas data
+              </span>
             </span>
           )}
         </div>

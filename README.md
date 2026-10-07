@@ -1,8 +1,27 @@
 # ContextBridge
 
-ContextBridge reconstructs scattered workplace context for Northstar Technologies. Alex Morgan, Senior Product Engineer, was away September 16–23 (8 working days). The product shows what changed on Project Atlas: the Auth0 decision, the September 22 revision, and the payment sandbox blocker.
+ContextBridge reconstructs what changed in a project while someone was away, and keeps every explanation tied to the records that produced it.
 
-The reconstruction is deterministic. An optional AI layer can explain those results. It does not replace them. `AI_PROVIDER=none` still serves catch-up, the graph, the timeline, and search.
+## The problem
+
+Work context is fragmented across meetings, tickets, pull requests, documents, and discussions. After time away, the useful question is not “what was posted,” but what actually changed, why, and what still needs a decision.
+
+## The solution
+
+ContextBridge reconstructs that change over time. Raw events become a ranked catch-up, a context graph, a timeline, and search. An optional AI layer can explain the reconstruction. It does not replace it.
+
+## Product demo
+
+A live URL is not deployed yet. Run the app locally with the commands below. Project Atlas is synthetic data for Alex Morgan at Northstar Technologies, away September 16–23. Slack, Jira, and GitHub are not connected.
+
+## Key experiences
+
+- What Did I Miss: a guided catch-up of the Atlas absence, with evidence beside each change
+- Context graph: requirements, decisions, tasks, code, and people in one view
+- Trace Why and Trace Impact: follow the causal chain into and out of a decision
+- Timeline: September 16–23 story lanes, not a Gantt chart
+- Hybrid search: keyword match plus a local semantic score
+- Ask Context: a question answered from retrieved project evidence
 
 ## Architecture
 
@@ -15,54 +34,48 @@ flowchart LR
   react --> api --> recon --> ai
 ```
 
-Raw Atlas events stay in the backend. The API returns project records. React Flow layout stays in the browser. There is no database.
+There is no database. The browser keeps theme, sidebar, workspace, and project selection. Graph layout stays in React Flow.
 
-## Features
+## Pipeline
 
-- Overview for the September 16–23 absence
-- Guided catch-up with evidence and an explicit demo fallback
-- Context Graph with Trace Why and Trace Impact
-- Timeline story lanes and project search
-- Ask Context, evidence-checked explanations, and hybrid search when a provider is on
-- Dashed AI-inferred graph edges that do not overwrite deterministic edges
+Raw events → normalization → entities → relationships → stories → changes → ranking.
 
-## React structure
+Relationships include `triggered`, `discussed_in`, `resulted_in`, `implemented_by`, `superseded_by`, `evidence_for`, `blocked_by`, and `assigned_to`. Ranking favors decision changes, requirement changes, blockers, direct user impact, mixed sources, and unresolved items. Noise is not cited.
 
-Pages live under `src/pages`. Feature UI lives under `src/components` (catch-up, graph, timeline, search, ask). `src/services/api/client.ts` is the only module that reads `VITE_API_BASE_URL`. Hooks load catch-up, graph, timeline, search, explanations, and capabilities. Theme, sidebar, workspace, and project selection stay in the browser.
+The authentication chain that the engine reconstructs is: customer feedback → enterprise SSO requirement → architecture discussion → Auth0 selected → AUTH-142 → PR #184 → token-refresh limitation → authentication decision revised → custom authentication architecture. Auth0 stays superseded. The custom architecture stays current.
 
-## Reconstruction pipeline
+## AI layer
 
-Raw events are normalized, then resolved into entities and relationships (`triggered`, `discussed_in`, `resulted_in`, `implemented_by`, `superseded_by`, `evidence_for`, `blocked_by`, `assigned_to`). Those become stories, meaningful changes, and a ranked catch-up. Ranking favors decision changes, requirement changes, blockers, direct user impact, mixed sources, and unresolved items. Noise is not cited.
+`AI_PROVIDER=none` still serves catch-up, the graph, the timeline, and search. Ask then says AI reasoning is unavailable. `mock` is deterministic and offline. `openai` and `gemini` run only on the server, and only when `AI_API_KEY` is set. A missing key falls back to none. Gemini text uses `gemini-3.8-flash` when `AI_MODEL` is empty. Embeddings stay on a local concept vector.
 
-## AI architecture
+## Evidence and provenance
 
-`AIProvider` is server-only: `none`, `mock`, `openai`, and `gemini`. `get_provider()` returns nothing for `none`, and for `openai` or `gemini` when `AI_API_KEY` is missing. The React app never sees a key. Ask retrieves at most 8 events. Outputs are checked against known event ids and clipped. Hybrid search weights keyword, semantic similarity, importance, and recency. Gemini text uses `generateContent`. Gemini embeddings stay on the local concept vector.
+Deterministic edges are labeled `deterministic`. An inferred edge is dashed, labeled `ai_inferred`, and the detail panel says it is AI inferred. Ask and Why cite event ids that exist in the reconstruction. Unknown ids are dropped. If the records are not enough, Ask says ContextBridge doesn't have enough project evidence to answer this confidently.
 
-## Provenance
+## Frontend
 
-Deterministic edges are `confidenceSource: deterministic`. An inferred edge is `ai_inferred` and drawn dashed. Explanations and Ask answers cite evidence from the reconstruction. When the provider is off or fails, Why falls back to that evidence: “AI explanation is temporarily unavailable. Showing the reconstructed project evidence instead.”
+React, TypeScript, and React Router. Feature folders cover catch-up, graph, timeline, search, and ask. `@xyflow/react` draws the graph. Layout is responsive. State is local React state plus the URL (`story`, `focus`, `q`, and filters). There is no Redux. `src/services/api/client.ts` is the only module that reads `VITE_API_BASE_URL`. The graph and timeline routes load with `React.lazy`.
 
-## Graph
+If the first API check fails, or `VITE_API_BASE_URL` is empty, the app shows the local Atlas demo and the label “Demo workspace — synthetic Project Atlas data”. If a configured API was already connected and a later request fails, the screen stays on “Reconstruction unavailable” with “Use demo data”.
 
-The Context Graph is a React Flow view of the API graph. Focus, Trace Why, and Trace Impact stay client-side. Auth0 superseded by the custom architecture is not a causal column. The React Flow attribution stays visible.
+## Backend
 
-## Timeline
+FastAPI and Pydantic. Services reconstruct the project and, when configured, call `AIProvider`. `GET /health` returns `{"status":"healthy","service":"contextbridge-api"}` and does not call a model. `GET /api/capabilities` reports whether a provider will actually run.
 
-`/timeline` is story lanes for September 16–23, not a card list or a Gantt chart. Explore Context opens `/graph?focus=`. Graph detail can return to `/timeline?focus=`.
+## Deployment
 
-## Hybrid search
+Neither Firebase Hosting nor Cloud Run is deployed. The repo only contains the config and the container.
 
-`/search` queries the API. `mode=keyword` is the deterministic match. `mode=hybrid` adds the local semantic score. The top bar submits to `/search?q=`.
+Checklist, all manual and not done:
 
-## Ask Context
+- [ ] Create a Firebase project and run `firebase use --add` from `.firebaserc.example`. Do not commit a real project id.
+- [ ] `npm run build`, then `firebase deploy` for Hosting only. `firebase.json` rewrites every route to `/index.html`.
+- [ ] Enable billing, the Cloud Run API, and `gcloud` auth in a Google account.
+- [ ] `gcloud run deploy` the `backend` image, set `PORT`, and pass `ENVIRONMENT`, `ALLOWED_ORIGINS`, and `AI_PROVIDER` at runtime. Do not bake `AI_API_KEY` into the image.
 
-`/ask` sends the question to the API. Suggested questions cover the authentication change, blockers, attention, and decisions. When `GET /api/capabilities` reports `ai: false`, the page says AI reasoning is unavailable and leaves catch-up, the graph, the timeline, and search in place.
+A Content-Security-Policy header is omitted because the API origin is chosen at build time through `VITE_API_BASE_URL` and cannot be named in `firebase.json`. Hosting does send `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a Permissions-Policy that disables camera, microphone, and geolocation.
 
-## Stack
-
-React, TypeScript, Vite, Tailwind, React Router, Lucide, shadcn primitives (Button, DropdownMenu, Dialog, Tooltip, Sheet, Popover; radix-ui and class-variance-authority), `@xyflow/react`, FastAPI, Pydantic, Docker, Firebase Hosting config, Cloud Run readiness, a Gemini provider, and GitHub Actions.
-
-## Local development
+## Local commands
 
 Frontend:
 
@@ -82,13 +95,15 @@ python3 -m venv .venv
 .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8077
 ```
 
-Production frontend bundle:
+Tests and production bundle:
 
 ```bash
+cd backend && .venv/bin/pytest
 npm run build
+npm run lint
 ```
 
-API image (no secrets, no `.env`):
+API image:
 
 ```bash
 docker build -t contextbridge-api -f backend/Dockerfile backend
@@ -98,61 +113,25 @@ curl http://127.0.0.1:18080/health
 
 `docker compose up` is local-only and maps `8077:8080`. Do not start it while uvicorn already owns 8077.
 
-## Environment variables
+Environment names are in `.env.example`: `VITE_API_BASE_URL`, `ENVIRONMENT`, `ALLOWED_ORIGINS`, `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, and `PORT`. Do not commit `.env`, keys, or service accounts.
 
-See `.env.example`. Do not commit `.env`, keys, or service accounts.
+## Synthetic Atlas data
 
-| Name | Role |
-| --- | --- |
-| `VITE_API_BASE_URL` | API origin baked in at frontend build time. Default `http://127.0.0.1:8077`. |
-| `ENVIRONMENT` | `production` switches CORS to `ALLOWED_ORIGINS` only. Unset keeps the Vite dev origins. |
-| `ALLOWED_ORIGINS` | Comma-separated browser origins. |
-| `AI_PROVIDER` | `none`, `mock`, `openai`, or `gemini`. |
-| `AI_API_KEY` | Server only. Never in the image, the bundle, or React. |
-| `AI_MODEL` | Optional. Empty uses `gpt-4o-mini` for OpenAI and `gemini-3.8-flash` for Gemini. |
-| `PORT` | Container listen port. Default 8080. |
+The people, tickets, and pull requests are written for this demo. The sidebar says so. The reconstruction still runs on those raw events, so the graph, timeline, and catch-up agree on the same story.
 
-## Tests
+## Screenshots
 
-```bash
-cd backend
-.venv/bin/pytest
-```
+Reproduce these with the frontend on port 43123 and the API on port 8077 (`AI_PROVIDER=mock` for Ask):
 
-Tests use `mock` or `none`. They do not call Gemini or OpenAI.
+- `/overview` — light, desktop
+- `/catch-up?story=authentication-architecture` — the authentication story, light
+- `/graph?focus=authentication-decision-revised` — open the revised decision and choose Trace Why
+- `/timeline` — September 16–23, light
+- `/ask` — ask “Why did we stop using Auth0?”
 
-## Docker
+## Known limitations
 
-`backend/Dockerfile` is a production image: Python 3.12, non-root user, `uvicorn` without `--reload`, listen on `$PORT`. `GET /health` returns `{"status":"healthy","service":"contextbridge-api"}` and does not call a provider. `GET /api/health` remains `{"status":"ok"}`.
-
-## Deploy architecture
-
-What is in the repo:
-
-- `firebase.json` serves the Vite `dist` directory as a single-page app. `**` rewrites to `/index.html`, so `/overview`, `/catch-up`, `/timeline`, `/graph`, `/search`, and `/ask` survive refresh. Hashed `/assets/**` are cached for a year. `index.html` is `no-cache`.
-- `.firebaserc.example` is a placeholder. Run `firebase use --add` in a Google account you control. Do not commit a real project id.
-- The API container is ready for Cloud Run: it listens on `$PORT` and reads configuration from the environment.
-
-What you do in a Google account (not run here):
-
-```bash
-gcloud run deploy contextbridge-api \
-  --source backend \
-  --set-env-vars ENVIRONMENT=production,AI_PROVIDER=none,ALLOWED_ORIGINS=https://YOUR_HOSTING_ORIGIN \
-  --port 8080
-```
-
-Pass `AI_API_KEY` as a runtime environment variable or secret if you choose a live provider. Do not bake it into the image. Cloud Run sets `PORT`. Billing, API enablement, and `gcloud` auth are manual and were not run.
-
-A Content-Security-Policy header is omitted because the API origin is chosen at build time through `VITE_API_BASE_URL` and cannot be named in `firebase.json`.
-
-## Security
-
-Hosting sends `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a Permissions-Policy that disables camera, microphone, and geolocation. Production CORS never allows `*`. Ask, explain-change, and story summary are limited to 20 requests per IP per 60 seconds and to 500 characters per question. Provider calls time out at 20 seconds. Error responses omit stack traces, keys, and filesystem paths. Logs record path, status, latency, provider name, and fallback. They do not record keys or full prompts.
-
-## Limitations
-
-The rate limit is in memory on one process. Semantic search uses a local concept vector, not a hosted embedding index. Gemini text generation is implemented and uncalled unless `AI_PROVIDER=gemini` and a key are set. This repository does not deploy, create a Firebase project, or enable billing.
+The rate limit is in memory on one process. Semantic search uses a local concept vector, not a hosted embedding model. Decisions and sources are previews, not live catalogs. There is no authentication. This repository does not deploy, create a Firebase project, or enable billing.
 
 ## Routes
 
