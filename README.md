@@ -12,7 +12,9 @@ ContextBridge reconstructs that change over time. Raw events become a ranked cat
 
 ## Product demo
 
-There is no live frontend or backend URL. Firebase Hosting and Cloud Run were not deployed: `firebase deploy` stopped at `firebase login`, and `gcloud run deploy` stopped with no credentialed account and no project. Run the app locally with the commands below. If the API is down, or `VITE_API_BASE_URL` is empty, the static app still shows the Atlas demo. Project Atlas is synthetic data for Alex Morgan at Northstar Technologies, away September 16–23. Slack, Jira, and GitHub are not connected. No model key is in this environment, so a future Cloud Run deploy should set `AI_PROVIDER=none`.
+Live app: [https://contextbridge-portfolio.web.app](https://contextbridge-portfolio.web.app)
+
+Firebase Hosting project `contextbridge-portfolio` is deployed. Cloud Run is not. The live site is built with an empty `VITE_API_BASE_URL`, so it uses the local Atlas demo and does not call localhost. Project Atlas is synthetic data for Alex Morgan at Northstar Technologies, away September 16–23. Slack, Jira, and GitHub are not connected. There is no model key, so `AI_PROVIDER=none`.
 
 ## Key experiences
 
@@ -64,42 +66,24 @@ FastAPI and Pydantic. Services reconstruct the project and, when configured, cal
 
 ## Deployment
 
-Neither Firebase Hosting nor Cloud Run is deployed. The repo only contains the config and the container.
+Firebase Hosting is deployed for project `contextbridge-portfolio` at [https://contextbridge-portfolio.web.app](https://contextbridge-portfolio.web.app). Billing was not enabled. Hosting is the default no-cost configuration. Direct routes rewrite to `index.html`.
 
-Checklist, all manual and not done. Billing was not enabled from this environment.
-
-Firebase Hosting stopped here:
-
-```bash
-npx firebase-tools login
-npx firebase-tools use --add
-npm run build
-npx firebase-tools deploy --only hosting
-```
-
-`firebase deploy --only hosting --non-interactive` returned: `Error: Failed to authenticate, have you run firebase login?`
-
-Cloud Run stopped here. Install the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) if `gcloud` is not on your PATH, then:
+Cloud Run is not deployed. `gcloud` has no credentialed account on this machine, and the Firebase login token cannot be reused for the Cloud SDK (`unauthorized_client`). The next step is a personal `gcloud auth login` in the Google account that owns `contextbridge-portfolio`. If Google then asks to enable billing or the Cloud Run API, that approval is manual. Do not bake `AI_API_KEY` into the image.
 
 ```bash
 gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project contextbridge-portfolio
 gcloud run deploy contextbridge-api \
   --source backend \
   --region us-central1 \
   --port 8080 \
   --allow-unauthenticated \
-  --set-env-vars AI_PROVIDER=none,ENVIRONMENT=production,ALLOWED_ORIGINS=https://YOUR_HOSTING_ORIGIN
+  --set-env-vars AI_PROVIDER=none,ENVIRONMENT=production,ALLOWED_ORIGINS=https://contextbridge-portfolio.web.app
 ```
 
-`gcloud auth list` reported no credentialed accounts. `gcloud run deploy` then reported that `[project]` was not set. Do not bake `AI_API_KEY` into the image. If Cloud Run asks to enable billing or an API, approve that in your Google account. After the service URL responds, set `VITE_API_BASE_URL` to that HTTPS origin, rebuild, and deploy Hosting again.
+After the service URL responds, set `VITE_API_BASE_URL` to that HTTPS origin, rebuild, and deploy Hosting again.
 
-GitHub is not connected to this checkout. `gh auth status` says you are not logged in. To publish a private repo:
-
-```bash
-gh auth login
-gh repo create contextbridge --private --source=. --remote=github --push
-```
+The public GitHub repository is [https://github.com/saikumarreddy2001/contextbridge](https://github.com/saikumarreddy2001/contextbridge).
 
 A Content-Security-Policy header is omitted because the API origin is chosen at build time through `VITE_API_BASE_URL` and cannot be named in `firebase.json`. Hosting does send `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a Permissions-Policy that disables camera, microphone, and geolocation.
 
@@ -159,7 +143,7 @@ Reproduce these with the frontend on port 43123 and the API on port 8077 (`AI_PR
 
 ## Known limitations
 
-The rate limit is in memory on one process. Semantic search uses a local concept vector, not a hosted embedding model. Decisions and sources are previews, not live catalogs. There is no authentication. This repository does not deploy, create a Firebase project, or enable billing.
+The rate limit is in memory on one process. Semantic search uses a local concept vector, not a hosted embedding model. Decisions and sources are previews, not live catalogs. There is no authentication. The live site is the synthetic Atlas demo because Cloud Run is not deployed. Billing was not enabled.
 
 ## Routes
 
